@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Calculations</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+<h1>Testing Mission Rate Calculations</h1>
+
+<script>
+// Simulate the mission rates data that would come from Laravel
+window.missionRates = [
+    {name: "خارج القطر/1", responsibility_level: "منتسب", daily_rate: "30000.00"},
+    {name: "خارج القطر/1", responsibility_level: "مسؤول شعبة", daily_rate: "32500.00"},
+    {name: "خارج القطر/1", responsibility_level: "مسؤول وجبة", daily_rate: "35000.00"},
+    {name: "خارج القطر/1", responsibility_level: "مسؤول وحدة", daily_rate: "37500.00"},
+];
+
+console.log("✅ missionRates loaded:", window.missionRates.length, "records");
+
+// Test the search logic
+function searchMission(missionName, responsibilityLevel) {
+    console.log(`\n🔎 Searching: "${missionName}" + "${responsibilityLevel}"`);
+    
+    if (!missionName || !responsibilityLevel || !window.missionRates) {
+        console.log("❌ Missing data");
+        return null;
+    }
+    
+    const found = window.missionRates.find(m => {
+        const nameMatch = m.name === missionName;
+        const levelMatch = m.responsibility_level === responsibilityLevel;
+        console.log(`   Checking: "${m.name}" (${nameMatch}) + "${m.responsibility_level}" (${levelMatch})`);
+        return nameMatch && levelMatch;
+    });
+    
+    if (found) {
+        console.log("✅ Found:", found.daily_rate);
+        return parseFloat(found.daily_rate);
+    } else {
+        console.log("❌ Not found");
+        return null;
+    }
+}
+
+// Run tests
+console.log("\n=== TEST 1: خارج القطر/1 + مسؤول وجبة ===");
+const rate1 = searchMission("خارج القطر/1", "مسؤول وجبة");
+if (rate1 === 35000) {
+    console.log("✅ TEST PASSED");
+} else {
+    console.log("❌ TEST FAILED - Expected 35000, got " + rate1);
+}
+
+console.log("\n=== TEST 2: خارج القطر/1 + مسؤول وحدة ===");
+const rate2 = searchMission("خارج القطر/1", "مسؤول وحدة");
+if (rate2 === 37500) {
+    console.log("✅ TEST PASSED");
+} else {
+    console.log("❌ TEST FAILED - Expected 37500, got " + rate2);
+}
+
+console.log("\n=== TEST 3: Calculation Test ===");
+const days = 5;
+const dailyRate = 35000;
+const receipts = 100000;
+const total = (days * dailyRate) + receipts;
+console.log(`تحساب: (${days} × ${dailyRate}) + ${receipts} = ${total}`);
+if (total === 275000) {
+    console.log("✅ CALCULATION PASSED");
+} else {
+    console.log("❌ CALCULATION FAILED");
+}
+</script>
+
+<div id="output"></div>
+<p><a href="http://127.0.0.1:8000/payrolls">Back to Payroll</a></p>
+</body>
+</html>
