@@ -275,20 +275,15 @@ class BackupController extends Controller
             $projectDir = base_path();
             $backupFile = "{$backupFolder}/code_{$timestamp}.zip";
 
-            // استخدام PowerShell لضغط الملفات مع استبعاد المجلدات الكبيرة
-            $excludeDirs = implode('|', [
-                'node_modules',           // مكتبات Node.js (يتم تثبيتها عبر npm)
-                'vendor',                 // مكتبات PHP (يتم تثبيتها عبر composer)
-                'storage/logs',           // ملفات السجلات
-                'storage/backups',        // النسخ الاحتياطية (لتجنب التكرار)
-                'storage/framework/cache', // ملفات الكاش المؤقتة
-                'storage/framework/sessions', // جلسات المستخدمين المؤقتة
-                'storage/framework/testing',  // ملفات الاختبار المؤقتة
-                'bootstrap/cache',        // كاش Laravel
-                '.git'                    // مجلد Git
-            ]);
+            // نسخ "الكود" فقط: استبعاد المجلدات الديناميكية/الكبيرة لتفادي مشاكل القفل في ويندوز
+            $excludeDirs = [
+                'node_modules',   // مكتبات Node.js (يتم تثبيتها عبر npm)
+                'vendor',         // مكتبات PHP (يتم تثبيتها عبر composer)
+                'storage',        // ملفات ديناميكية (logs/cache/sessions/backups...)
+                'bootstrap/cache',
+                '.git'
+            ];
 
-            // الطريقة الأمثل: استخدام exec مع php
             $this->zipDirectory($projectDir, $backupFile, $excludeDirs);
 
             if (file_exists($backupFile) && filesize($backupFile) > 0) {
@@ -313,36 +308,104 @@ class BackupController extends Controller
     /**
      * ضغط المجلد بشكل ديناميكي
      */
-    private function zipDirectory($source, $destination, $excludePattern = '')
+    private function zipDirectory($source, $destination, array $excludeDirs = [])
     {
+        $sourceRealPath = realpath($source);
+        if ($sourceRealPath === false || !is_dir($sourceRealPath)) {
+            throw new \Exception('مجلد المصدر غير صالح للضغط');
+        }
+
+        $destinationDir = dirname($destination);
+        if (!is_dir($destinationDir) && !mkdir($destinationDir, 0755, true)) {
+            throw new \Exception('تعذر إنشاء مجلد ملف ZIP');
+        }
+
+        $normalizedSource = rtrim(str_replace('\\', '/', $sourceRealPath), '/');
+        $excludedPrefixes = array_map(function ($dir) {
+            return strtolower(trim(str_replace('\\', '/', $dir), '/')) . '/';
+        }, $excludeDirs);
+
         $zip = new \ZipArchive();
-        if (!$zip->open($destination, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
-            throw new \Exception('فشل إنشاء ملف ZIP');
+        $openResult = $zip->open($destination, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+        if ($openResult !== true) {
+            throw new \Exception('فشل إنشاء ملف ZIP (رمز: ' . $openResult . ')');
         }
 
         $files = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($source),
+            new \RecursiveDirectoryIterator($sourceRealPath, \FilesystemIterator::SKIP_DOTS),
             \RecursiveIteratorIterator::LEAVES_ONLY
         );
 
+        $filesAdded = 0;
+        $filesSkipped = 0;
+
         foreach ($files as $file) {
-            if ($file->isDir()) {
+            if (!$file->isFile()) {
                 continue;
             }
 
-            $filePath = $file->getRealPath();
-            $relativePath = substr($filePath, strlen($source) + 1);
+            $filePath = $file->getPathname();
+            $realPath = realpath($filePath);
 
-            // التحقق من الاستثناءات - تحويل المسار إلى forward slashes للتوافق
-            $normalizedPath = str_replace('\\', '/', $relativePath);
-            if ($excludePattern && preg_match("#{$excludePattern}#i", $normalizedPath)) {
+            if ($realPath === false || !is_readable($realPath)) {
+                $filesSkipped++;
                 continue;
             }
 
-            $zip->addFile($filePath, $relativePath);
+            $normalizedFilePath = str_replace('\\', '/', $realPath);
+            $sourcePrefix = $normalizedSource . '/';
+
+            // تجاهل أي ملف خارج مجلد المشروع (قد يحصل مع بعض الروابط الرمزية)
+            if (!str_starts_with(strtolower($normalizedFilePath), strtolower($sourcePrefix))) {
+                $filesSkipped++;
+                continue;
+            }
+
+            $relativePath = substr($normalizedFilePath, strlen($sourcePrefix));
+            if ($relativePath === '') {
+                $filesSkipped++;
+                continue;
+            }
+
+            $relativePathLower = strtolower($relativePath);
+            $shouldExclude = false;
+            foreach ($excludedPrefixes as $excludedPrefix) {
+                if (str_starts_with($relativePathLower, $excludedPrefix)) {
+                    $shouldExclude = true;
+                    break;
+                }
+            }
+
+            if ($shouldExclude) {
+                $filesSkipped++;
+                continue;
+            }
+
+            if (!$zip->addFile($realPath, $relativePath)) {
+                $filesSkipped++;
+                Log::warning('Skipping file during code backup because ZipArchive::addFile failed', [
+                    'file' => $realPath,
+                ]);
+                continue;
+            }
+
+            $filesAdded++;
         }
 
-        $zip->close();
+        if (!$zip->close()) {
+            throw new \Exception('فشل إغلاق ملف ZIP بعد إضافة الملفات');
+        }
+
+        clearstatcache(true, $destination);
+        if (!file_exists($destination) || filesize($destination) === 0 || $filesAdded === 0) {
+            throw new \Exception('ملف ZIP الناتج غير صالح أو فارغ');
+        }
+
+        Log::info('Code backup zip completed', [
+            'destination' => $destination,
+            'files_added' => $filesAdded,
+            'files_skipped' => $filesSkipped,
+        ]);
     }
 
     /**

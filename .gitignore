@@ -22,3 +22,9 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Runtime-generated backup artifacts
+/storage/backups/
+
+# Temporary Excel lock files
+/storage/xls/~$*.xlsx
