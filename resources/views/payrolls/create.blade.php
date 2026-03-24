@@ -53,8 +53,40 @@
                             <thead class="bg-gray-800 text-white" style="font-size: 13px;">
                                 <tr style="vertical-align: middle;">
                                     <th class="border p-2 text-center">الاسم والقسم</th>
-                                    <th class="border p-2 text-center">العنوان الوظيفي</th>
-                                    <th class="border p-2 text-center" style="width: 140px;">جهة الايفاد</th>
+                    <th class="border p-2 text-center">العنوان الوظيفي</th>
+                    <th class="border p-2 text-center" style="width: 140px;">
+                        جهة الايفاد
+                        <div style="margin-top: 4px;">
+                                <select id="masterGovernorateSelect" class="border border-gray-300 rounded px-1 py-0.5 text-center" style="width: 120px; font-size: 12px; color: #222; background: #fff;">
+                                    <option value="">اختر المحافظة</option>
+                                    <!-- سيتم ملء الخيارات ديناميكيًا -->
+                            </select>
+                        </div>
+                    </th>
+                            </select>
+                        </div>
+                    </th>
+
+<script>
+// ملء قائمة المحافظات في رأس العمود بنفس الخيارات من #cities_source وتعميم الاختيار
+document.addEventListener('DOMContentLoaded', function() {
+    var masterGov = document.getElementById('masterGovernorateSelect');
+    var citiesSource = document.getElementById('cities_source');
+    if (masterGov && citiesSource) {
+        masterGov.innerHTML = '<option value="">اختر المحافظة</option>' + citiesSource.innerHTML;
+    }
+    if (masterGov) {
+        masterGov.addEventListener('change', function() {
+            var value = this.value;
+            // تعميم الاختيار على كل قوائم الوجهة في الصفوف
+            document.querySelectorAll('select.js-city-id').forEach(function(sel) {
+                sel.value = value;
+                sel.dispatchEvent(new Event('change'));
+            });
+        });
+    }
+});
+</script>
                                     <th class="border p-2 text-center" style="width: 170px;">
                                         <div style="font-size: 11px; margin-bottom: 3px;">رقم الأمر / تاريخه</div>
                                         <div class="flex items-center gap-1 mt-1" style="font-size: 10px;">
