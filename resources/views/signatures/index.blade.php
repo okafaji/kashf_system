@@ -1,14 +1,18 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center" dir="rtl">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('إدارة التواقيع') }}
-            </h2>
-            <x-button-success>
-                <a href="{{ route('signatures.create') }}" class="text-white">
-                    إضافة توقيع جديد +
-                </a>
-            </x-button-success>
+        <div class="fixed top-16 inset-x-0 z-40 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-lg shadow-sm p-4" dir="rtl">
+                <div class="flex items-center justify-between gap-3 flex-wrap mb-0">
+                    <h2 class="font-semibold text-xl text-gray-800 leading-tight whitespace-nowrap shrink-0 mb-0">
+                        {{ __('إدارة التواقيع') }}
+                    </h2>
+                    <x-button-success>
+                        <a href="{{ route('signatures.create') }}" class="text-white">
+                            إضافة توقيع جديد +
+                        </a>
+                    </x-button-success>
+                </div>
+            </div>
         </div>
     </x-slot>
 

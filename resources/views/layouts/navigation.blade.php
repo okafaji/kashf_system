@@ -1,4 +1,4 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+<nav x-data="{ open: false }" class="bg-white border-b border-gray-100 fixed top-0 left-0 right-0 w-full z-50 shadow">
     @php
         $departmentsPagePermissions = config('permissions.page_permissions.departments.access', ['access-departments-page']);
         $governoratesPagePermissions = config('permissions.page_permissions.governorates.access', ['access-governorates-page']);

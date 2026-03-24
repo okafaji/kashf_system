@@ -1,37 +1,38 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight text-right">سجل تدقيق الكشوفات</h2>
+        <div class="fixed top-16 inset-x-0 z-40 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-lg shadow-sm p-4" dir="rtl">
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                    <h2 class="font-semibold text-xl text-gray-800 leading-tight whitespace-nowrap shrink-0 mb-0">
+                        سجل تدقيق الكشوفات
+                    </h2>
+                    <form method="GET" action="{{ route('payrolls.audit') }}" class="flex flex-wrap items-center gap-2 md:gap-3">
+                        <input type="text" name="kashf_no" value="{{ $filters['kashf_no'] }}" placeholder="رقم الكشف" class="border-gray-300 rounded-md w-28 md:w-32">
+                        <select name="action" class="border-gray-300 rounded-md w-28 md:w-32">
+                            <option value="">كل العمليات</option>
+                            @foreach($actionOptions as $action)
+                                <option value="{{ $action }}" @selected($filters['action'] === $action)>{{ $actionLabels[$action] ?? $action }}</option>
+                            @endforeach
+                        </select>
+                        <select name="user_id" class="border-gray-300 rounded-md w-32 md:w-36">
+                            <option value="">كل المستخدمين</option>
+                            @foreach($userOptions as $user)
+                                <option value="{{ $user->id }}" @selected((string)$filters['user_id'] === (string)$user->id)>{{ $user->name }}</option>
+                            @endforeach
+                        </select>
+                        <input type="text" name="from_date" value="{{ $filters['from_date'] }}" placeholder="yyyy/mm/dd" class="border-gray-300 rounded-md w-24 md:w-28">
+                        <input type="text" name="to_date" value="{{ $filters['to_date'] }}" placeholder="yyyy/mm/dd" class="border-gray-300 rounded-md w-24 md:w-28">
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm">تصفية</button>
+                        <a href="{{ route('payrolls.audit') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm">إعادة</a>
+                    </form>
+                </div>
+            </div>
+        </div>
     </x-slot>
 
     <div class="py-8" dir="rtl">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4">
-            <div class="bg-white rounded-lg shadow-sm p-4">
-                <form method="GET" action="{{ route('payrolls.audit') }}" class="grid grid-cols-1 md:grid-cols-6 gap-3">
-                    <input type="text" name="kashf_no" value="{{ $filters['kashf_no'] }}" placeholder="رقم الكشف" class="border-gray-300 rounded-md">
-
-                    <select name="action" class="border-gray-300 rounded-md">
-                        <option value="">كل العمليات</option>
-                        @foreach($actionOptions as $action)
-                            <option value="{{ $action }}" @selected($filters['action'] === $action)>{{ $actionLabels[$action] ?? $action }}</option>
-                        @endforeach
-                    </select>
-
-                    <select name="user_id" class="border-gray-300 rounded-md">
-                        <option value="">كل المستخدمين</option>
-                        @foreach($userOptions as $user)
-                            <option value="{{ $user->id }}" @selected((string)$filters['user_id'] === (string)$user->id)>{{ $user->name }}</option>
-                        @endforeach
-                    </select>
-
-                    <input type="text" name="from_date" value="{{ $filters['from_date'] }}" placeholder="yyyy/mm/dd" class="border-gray-300 rounded-md">
-                    <input type="text" name="to_date" value="{{ $filters['to_date'] }}" placeholder="yyyy/mm/dd" class="border-gray-300 rounded-md">
-
-                    <div class="flex gap-2">
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md">تصفية</button>
-                        <a href="{{ route('payrolls.audit') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md">إعادة</a>
-                    </div>
-                </form>
-            </div>
+            <!-- تمت ترقية شريط التصفية ليكون في الهيدر -->
 
             <script>
             (function () {

@@ -1,27 +1,30 @@
 <x-app-layout>
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8" dir="rtl">
-            <div class="mb-4 flex items-center justify-between">
-                <h2 class="text-xl font-bold text-gray-900">إدارة النسخ الاحتياطية</h2>
-                <a href="{{ route('dashboard') }}"
-                   class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded font-semibold text-sm">
-                    الرجوع للوحة الرئيسية
-                </a>
+    <div class="fixed top-16 inset-x-0 z-40 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-lg shadow-sm p-4" dir="rtl">
+            <div class="flex items-center justify-between gap-3 flex-wrap mb-0">
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight whitespace-nowrap shrink-0 mb-0">إدارة النسخ الاحتياطية</h2>
+                <div class="flex gap-2 flex-wrap">
+                    <button id="backup-create-database-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold text-sm">
+                        💾 نسخ قاعدة البيانات
+                    </button>
+                    <button id="backup-create-code-btn" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded font-semibold text-sm">
+                        📁 نسخ الأكواد
+                    </button>
+                    <a href="{{ route('dashboard') }}"
+                       class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded font-semibold text-sm">
+                        الرجوع للوحة الرئيسية
+                    </a>
+                </div>
             </div>
+        </div>
+    </div>
 
+    <div class="py-32">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8" dir="rtl">
             <div class="mb-6 bg-white rounded-lg shadow p-6" id="backups">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-bold text-gray-900">النسخ الاحتياطية</h3>
-                    <div class="flex gap-2">
-                        <button id="backup-create-database-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold text-sm">
-                            💾 نسخ قاعدة البيانات
-                        </button>
-                        <button id="backup-create-code-btn" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded font-semibold text-sm">
-                            📁 نسخ الأكواد
-                        </button>
-                    </div>
                 </div>
-
                 <div id="backups-list" class="bg-gray-50 rounded p-4 min-h-[200px]">
                     <div class="text-center py-8 text-gray-500">
                         جاري تحميل النسخ الاحتياطية...
