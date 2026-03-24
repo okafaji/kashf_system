@@ -649,7 +649,9 @@ function clearAllRows() {
 
     if (confirm('هل تريد حذف جميع البيانات؟ سيتم فقدان كل المسودة.')) {
         $('#payrollTable tbody').empty();
-        localStorage.removeItem('payroll_draft');
+        // حذف المسودة الخاصة بالمستخدم الحالي
+        const storageKey = getStorageKey();
+        localStorage.removeItem(storageKey);
         updateTotals();
         showNotification('تم حذف جميع البيانات', 'success');
     }
