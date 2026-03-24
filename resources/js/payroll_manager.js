@@ -649,9 +649,11 @@ function clearAllRows() {
 
     if (confirm('هل تريد حذف جميع البيانات؟ سيتم فقدان كل المسودة.')) {
         $('#payrollTable tbody').empty();
-        // حذف المسودة الخاصة بالمستخدم الحالي
-        const storageKey = getStorageKey();
-        localStorage.removeItem(storageKey);
+        // حذف جميع مفاتيح المسودات المحتملة
+        localStorage.removeItem('payroll_draft');
+        if (window.currentUserId) {
+            localStorage.removeItem('payroll_draft:' + window.currentUserId);
+        }
         updateTotals();
         showNotification('تم حذف جميع البيانات', 'success');
     }
