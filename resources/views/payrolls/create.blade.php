@@ -1,11 +1,13 @@
 
 
 <x-app-layout>
-    <x-slot name="header">
-        <div class="mt-3 mb-2 flex items-center gap-3" dir="rtl">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight mr-2">{{ __('إضافة كشف إيفاد جديد') }}</h2>
 
-            <div class="flex items-center gap-2">
+    <x-slot name="header">
+        <div style="height: 80px;"></div> <!-- مساحة فارغة أعلى الصفحة -->
+        <div id="floatingToolbar" dir="rtl"
+            style="position: fixed; top: 80px; right: 30px; z-index: 1000; background: #fff; border: 1px solid #ccc; border-radius: 10px; box-shadow: 0 2px 8px #0002; padding: 12px 24px; min-width: 350px; max-width: 98vw;">
+            <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight mr-2 mb-0">{{ __('إضافة كشف إيفاد جديد') }}</h2>
                 <button type="button" onclick="document.getElementById('excel_input').click()" class="bg-green-600 hover:bg-green-700 text-white h-10 w-36 rounded shadow flex items-center justify-center text-sm">
                     📥 استيراد إكسل
                 </button>
@@ -17,8 +19,11 @@
                     حفظ وترحيل البيانات
                 </button>
             </div>
+            <div style="margin-top: 10px; text-align: right;">
+                <label for="employee_search" class="block text-sm font-medium text-gray-700 mb-1">ابحث عن المنتسب:</label>
+                <select id="employee_search" style="width: 320px;"></select>
+            </div>
         </div>
-
     </x-slot>
 
     <script>
@@ -33,13 +38,9 @@
         console.log('📊 Mission rates loaded:', window.missionRates ? window.missionRates.length : 0);
     </script>
 
-    <div class="py-6">
+    <div class="py-6" style="margin-top: 100px;">
         <div class="max-w-full mx-auto px-4">
             <div class="bg-white shadow-sm sm:rounded-lg p-4">
-                <div class="mb-4 text-right" dir="rtl">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">ابحث عن المنتسب:</label>
-                    <select id="employee_search" class="w-full"></select>
-                </div>
 
                 @if(session('error'))
                     <div class="bg-red-100 p-3 rounded mb-4 text-right" dir="rtl">{{ session('error') }}</div>
