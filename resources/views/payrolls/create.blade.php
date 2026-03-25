@@ -7,7 +7,12 @@
         <div id="floatingToolbar" dir="rtl"
             style="position: fixed; top: 80px; right: 30px; z-index: 1000; background: #fff; border: 1px solid #ccc; border-radius: 10px; box-shadow: 0 2px 8px #0002; padding: 12px 24px; min-width: 350px; max-width: 98vw;">
             <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight mr-2 mb-0">{{ __('إضافة كشف إيفاد جديد') }}</h2>
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight mr-2 mb-0">
+                    {{ __('إضافة كشف إيفاد جديد') }}
+                    <span id="employeeCountLabel" style="font-size:16px; color:#2563eb; font-weight:600; margin-right:10px;">
+                        (عدد المنتسبين: <span id="employeeCount">0</span>)
+                    </span>
+                </h2>
                 <button type="button" onclick="document.getElementById('excel_input').click()" class="bg-green-600 hover:bg-green-700 text-white h-10 w-36 rounded shadow flex items-center justify-center text-sm">
                     📥 استيراد إكسل
                 </button>
@@ -36,6 +41,25 @@
             \App\Models\MissionType::select('name', 'responsibility_level', 'daily_rate')->get()
         );
         console.log('📊 Mission rates loaded:', window.missionRates ? window.missionRates.length : 0);
+    // تحديث عداد المنتسبين بجانب العنوان
+    function updateEmployeeCountLabel() {
+        var count = document.querySelectorAll('#payrollTable tbody tr').length;
+        document.getElementById('employeeCount').textContent = count;
+    }
+    // تحديث العداد عند أي تغيير في الجدول
+    document.addEventListener('DOMContentLoaded', function() {
+        updateEmployeeCountLabel();
+        // مراقبة التغييرات في tbody
+        var tbody = document.querySelector('#payrollTable tbody');
+        if (tbody) {
+            var observer = new MutationObserver(function() {
+                updateEmployeeCountLabel();
+            });
+            observer.observe(tbody, { childList: true, subtree: false });
+        }
+    });
+    // تحديث العداد عند إضافة موظف عبر الجافاسكريبت (لضمان التوافق)
+    window.updateEmployeeCountLabel = updateEmployeeCountLabel;
     </script>
 
     <div class="py-6" style="margin-top: 100px;">
@@ -122,7 +146,58 @@ document.addEventListener('DOMContentLoaded', function() {
                                         </div>
                                     </th>
                                     <th class="border p-2 w-32 text-center">ملاحظات</th>
-                                    <th class="border p-2 text-center">حذف</th>
+                                    <th class="border p-2 text-center">
+                                        <input type="checkbox" id="checkAllDeleteMulti" class="w-4 h-4 cursor-pointer" title="تأشير الكل للحذف المتعدد">
+                                        <div style="font-size:10px; color:#888;">حذف</div>
+                                    </th>
+                                    <script>
+                                    // منطق تأشير كل checkboxes الحذف المتعدد من رأس الجدول
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        var checkAll = document.getElementById('checkAllDeleteMulti');
+                                        if (checkAll) {
+                                            checkAll.addEventListener('change', function() {
+                                                var checked = this.checked;
+                                                var allCheckboxes = document.querySelectorAll('.js-delete-row-multi');
+                                                allCheckboxes.forEach(function(cb) {
+                                                    cb.checked = checked;
+                                                });
+                                                // تحديث عداد الحذف المتعدد وزر الحذف المتعدد مباشرة
+                                                var multiDeleteCount = document.getElementById('multiDeleteCount');
+                                                if (multiDeleteCount) {
+                                                    multiDeleteCount.textContent = checked ? allCheckboxes.length : 0;
+                                                }
+                                                // إظهار أو إخفاء زر الحذف المتعدد مباشرة
+                                                var multiDeleteBtn = document.getElementById('multiDeleteBtn');
+                                                if (multiDeleteBtn) {
+                                                    if (checked && allCheckboxes.length > 0) {
+                                                        multiDeleteBtn.style.display = '';
+                                                    } else {
+                                                        multiDeleteBtn.style.display = 'none';
+                                                    }
+                                                }
+                                            });
+                                        }
+                                        // تحديث حالة checkbox الرئيسي عند تغيير أي صف
+                                        document.addEventListener('change', function(e) {
+                                            if (e.target.classList && e.target.classList.contains('js-delete-row-multi')) {
+                                                var all = document.querySelectorAll('.js-delete-row-multi');
+                                                var checked = document.querySelectorAll('.js-delete-row-multi:checked');
+                                                if (checkAll) {
+                                                    if (checked.length === 0) {
+                                                        checkAll.checked = false;
+                                                        checkAll.indeterminate = false;
+                                                    } else if (checked.length === all.length) {
+                                                        checkAll.checked = true;
+                                                        checkAll.indeterminate = false;
+                                                    } else {
+                                                        checkAll.checked = false;
+                                                        checkAll.indeterminate = true;
+                                                    }
+                                                }
+                                            }
+                                        });
+                                    });
+                                    </script>
                                 </tr>
                             </thead>
                             <tbody class="bg-white text-right"></tbody>

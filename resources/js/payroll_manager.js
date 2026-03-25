@@ -613,6 +613,10 @@ function addEmployeeToTable(employeeId, employeeText, department, jobTitle,
 
     console.log(`✅ تم إضافة ${employeeName} للجدول`);
 
+    // تحديث عداد المنتسبين بجانب العنوان
+    if (window.updateEmployeeCountLabel) {
+        window.updateEmployeeCountLabel();
+    }
     // إضافة تأثير بصري للصف الجديد
     $row.addClass('bg-green-50');
     setTimeout(() => $row.removeClass('bg-green-50'), 1000);
@@ -639,6 +643,9 @@ function removeTableRow(rowId) {
             $row.remove();
             saveToLocalStorage();
             updateTotals();
+            if (window.updateEmployeeCountLabel) {
+                window.updateEmployeeCountLabel();
+            }
         }, 300);
     }
 }
@@ -658,6 +665,17 @@ function clearAllRows() {
         }
         updateTotals();
         showNotification('تم حذف جميع البيانات', 'success');
+        if (window.updateEmployeeCountLabel) {
+            window.updateEmployeeCountLabel();
+        }
+    // عند الحذف المتعدد: تحديث عداد المنتسبين
+    $(document).on('click', '#multiDeleteBtn', function(e) {
+        setTimeout(function() {
+            if (window.updateEmployeeCountLabel) {
+                window.updateEmployeeCountLabel();
+            }
+        }, 350);
+    });
     }
 }
 
