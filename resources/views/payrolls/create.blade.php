@@ -48,6 +48,11 @@
 
                 <form id="mainPayrollForm" action="{{ route('payrolls.store_multiple') }}" method="POST">
                     @csrf
+                    <div class="flex gap-2 mb-3" style="justify-content: flex-end;">
+                        <button type="button" id="multiDeleteBtn" class="bg-red-500 hover:bg-red-600 text-white h-10 w-40 rounded text-sm font-bold shadow-sm flex items-center justify-center" style="display: none;">
+                            🗑️ حذف متعدد (<span id="multiDeleteCount">0</span>)
+                        </button>
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full border-collapse border border-gray-200" id="payrollTable" dir="rtl">
                             <thead class="bg-gray-800 text-white" style="font-size: 13px;">

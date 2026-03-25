@@ -499,6 +499,8 @@ function addEmployeeToTable(employeeId, employeeText, department, jobTitle,
                     data-row-id="${rowId}" title="حذف السطر">
                 ❌
             </button>
+            <br>
+            <input type="checkbox" class="js-delete-row-multi w-4 h-4 cursor-pointer mt-1" title="تحديد للحذف المتعدد">
         </td>
     </tr>`;
 
@@ -906,7 +908,7 @@ function calculateRow($row) {
         // نستخدم القيمة الفعلية من حقل المبيت (الذي تم تحديثه بالفعل ليشمل 50% إن وجدت)
         const accommodationFee = parseFloat(accFeeInput.val()) || 0;
         total = (days * totalDaily) + (nights * accommodationFee) + receipts;
-        console.log('حساب المجموع (مدينة): (' + days + ' × ' + totalDaily + ') + (' + nights + ' × ' + accommodationFee + ') + ' + receipts + ' = ' + total);
+        console.log('حساب المجموع ( مدينة): (' + days + ' × ' + totalDaily + ') + (' + nights + ' × ' + accommodationFee + ') + ' + receipts + ' = ' + total);
     }
 
     // store numeric total for reliable calculations and show localized string for display
@@ -1083,6 +1085,7 @@ function loadSavedData() {
 
                 validData.forEach(item => {
                     const employeeText = item.name + (item.dept ? ' [' + item.dept + ']' : '');
+                    // لا تسترجع تأشير الجكبوكس للحذف المتعدد بعد التحديث
                     addEmployeeToTable(
                         item.employeeId,
                         employeeText,
@@ -1096,10 +1099,10 @@ function loadSavedData() {
                         item.accFee,
                         item.receipts,
                         item.notes,
-                        item.isHalf,
+                        false, // isHalf
                         item.receiptNo,
-                        item.missionType || '',  // 🔥 احفظ missionType من البيانات المحملة
-                        item.responsibilityLevel  // 🔥 قد يكون فارغاً من البيانات القديمة
+                        item.missionType || '',
+                        item.responsibilityLevel
                     );
                 });
 
@@ -1307,7 +1310,7 @@ function setupFormSubmit() {
             const hasMissionLevel = !!rowData.mission_type && !!rowData.responsibility_level;
 
             if (!hasCity && !hasMissionLevel) {
-                missingFields.push('الوجهة (مدينة أو خارج القطر + مستوى)');
+                missingFields.push('الوجهة ( مدينة أو خارج القطر + مستوى)');
             }
             if (rowData.mission_type && !rowData.responsibility_level) {
                 missingFields.push('المستوى الوظيفي');
@@ -2007,6 +2010,48 @@ $(document).on('change', '#masterEndDate', function() {
 });
 
 // ============ تصدير الدوال للاستخدام في HTML ============
+
+// ============ منطق زر الحذف المتعدد ============
+function updateMultiDeleteBtn() {
+    const checkedCount = $('.js-delete-row-multi:checked').length;
+    if (checkedCount > 0) {
+        $('#multiDeleteBtn').show();
+        $('#multiDeleteCount').text(checkedCount);
+    } else {
+        $('#multiDeleteBtn').hide();
+        $('#multiDeleteCount').text('0');
+    }
+}
+
+// عند التأشير على أي checkbox للحذف المتعدد
+$(document).on('change', '.js-delete-row-multi', function() {
+    updateMultiDeleteBtn();
+});
+
+// عند تحميل الصفحة: تأكد من إخفاء الزر في البداية
+$(document).ready(function() {
+    updateMultiDeleteBtn();
+});
+
+// عند الضغط على زر الحذف المتعدد
+$(document).on('click', '#multiDeleteBtn', function(e) {
+    e.preventDefault();
+    const checkedRows = $('.js-delete-row-multi:checked').closest('tr');
+    if (checkedRows.length === 0) {
+        alert('لا توجد صفوف محددة للحذف!');
+        return;
+    }
+    if (!confirm('هل تريد حذف جميع الصفوف المؤشرة؟')) {
+        return;
+    }
+    checkedRows.each(function() {
+        $(this).remove();
+    });
+    updateMultiDeleteBtn();
+    updateTotals();
+    saveToLocalStorage();
+    showNotification('تم حذف الصفوف المؤشرة بنجاح', 'success');
+});
 
 // تعريف الدوال على الكائن window ليتم الوصول إليها من HTML
 window.removeTableRow = removeTableRow;
