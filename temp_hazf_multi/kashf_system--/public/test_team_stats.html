@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار Team Stats API</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-center text-gray-900">🧪 اختبار Team Stats API</h1>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4 text-blue-600">API Test Results</h2>
+
+            <div id="results" class="space-y-4">
+                <div class="bg-blue-50 p-4 rounded border-l-4 border-blue-600">
+                    <p class="font-semibold text-blue-900">جارٍ الاختبار...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-bold mb-4 text-blue-600">Console Output</h2>
+            <pre id="console" class="bg-gray-900 text-green-400 p-4 rounded font-mono text-sm overflow-auto max-h-96">Loading...</pre>
+        </div>
+    </div>
+
+    <script>
+        const resultsDiv = document.getElementById('results');
+        const consoleDiv = document.getElementById('console');
+        let consoleLog = [];
+
+        // Intercept console.log
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            consoleLog.push(args.map(arg =>
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' '));
+            consoleDiv.textContent = consoleLog.join('\n');
+        };
+
+        async function testAPI() {
+            console.log('=== بدء اختبار API Team Stats ===');
+
+            const tests = [
+                {
+                    name: '1️⃣ جلب السنوات',
+                    url: '/api/user-years',
+                    params: {}
+                },
+                {
+                    name: '2️⃣ جلب الإجمالي الكلي',
+                    url: '/api/user-stats',
+                    params: {}
+                },
+                {
+                    name: '3️⃣ جلب إحصائيات السنة 2026',
+                    url: '/api/user-stats',
+                    params: { year: 2026 }
+                },
+                {
+                    name: '4️⃣ جلب أشهر السنة 2026',
+                    url: '/api/user-months',
+                    params: { year: 2026 }
+                }
+            ];
+
+            resultsDiv.innerHTML = '';
+
+            for (const test of tests) {
+                console.log(`\n✓ اختبار: ${test.name}`);
+
+                const queryString = new URLSearchParams(test.params).toString();
+                const fullUrl = queryString ? `${test.url}?${queryString}` : test.url;
+
+                try {
+                    const response = await fetch(fullUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    console.log(`  Status: ${response.status} ${response.statusText}`);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    console.log(`  Data:`, data);
+
+                    // Add to results
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'bg-green-50 p-4 rounded border-l-4 border-green-600';
+                    resultDiv.innerHTML = `
+                        <p class="font-semibold text-green-900">${test.name}</p>
+                        <p class="text-sm text-green-700 mt-1">✅ نجح</p>
+                        <pre class="text-xs bg-white p-2 rounded mt-2 text-gray-800 overflow-auto">${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                    resultsDiv.appendChild(resultDiv);
+
+                } catch (error) {
+                    console.log(`  ❌ خطأ: ${error.message}`);
+
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'bg-red-50 p-4 rounded border-l-4 border-red-600';
+                    resultDiv.innerHTML = `
+                        <p class="font-semibold text-red-900">${test.name}</p>
+                        <p class="text-sm text-red-700 mt-1">❌ فشل: ${error.message}</p>
+                    `;
+                    resultsDiv.appendChild(resultDiv);
+                }
+            }
+
+            console.log('\n=== انتهى الاختبار ===');
+        }
+
+        // Run tests on page load
+        setTimeout(testAPI, 500);
+    </script>
+</body>
+</html>

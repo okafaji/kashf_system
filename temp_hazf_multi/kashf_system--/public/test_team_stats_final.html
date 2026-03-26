@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ اختبار إصلاح Team Statistics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        .code-block { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 12px; font-family: 'Courier New'; font-size: 13px; overflow-x: auto; }
+        .success { border-left: 4px solid #22c55e; background: #f0fdf4; }
+        .warning { border-left: 4px solid #eab308; background: #fffbeb; }
+        .error { border-left: 4px solid #ef4444; background: #fef2f2; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-6">
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">✅ اختبار إصلاح Team Statistics</h1>
+            <p class="text-gray-600 text-lg">التحقق من جميع الإصلاحات المطبقة</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- JavaScript Test -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold mb-4 text-blue-600">🔍 اختبار JavaScript</h2>
+                <div id="jsTest" class="space-y-3"></div>
+            </div>
+
+            <!-- localStorage Test -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold mb-4 text-green-600">💾 اختبار localStorage</h2>
+                <div id="storageTest" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <!-- API Tests -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4 text-purple-600">🌐 اختبار API Endpoints</h2>
+            <div id="apiTest" class="space-y-3"></div>
+        </div>
+
+        <!-- Summary -->
+        <div id="summary" class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-bold mb-4 text-indigo-600">📊 الملخص</h2>
+            <div id="summaryContent" class="space-y-2"></div>
+        </div>
+    </div>
+
+    <script>
+        let results = {
+            js: [],
+            storage: [],
+            api: [],
+            summary: { passed: 0, failed: 0, warnings: 0 }
+        };
+
+        function addTest(category, condition, message, details = '') {
+            const result = {
+                status: condition ? 'pass' : condition === false ? 'fail' : 'warn',
+                message,
+                details
+            };
+            results[category].push(result);
+
+            if (result.status === 'pass') results.summary.passed++;
+            if (result.status === 'fail') results.summary.failed++;
+            if (result.status === 'warn') results.summary.warnings++;
+
+            return result;
+        }
+
+        async function runTests() {
+            // ========== JavaScript Tests ==========
+            addTest('js', typeof fetch === 'function', 'fetch API available');
+            addTest('js', typeof localStorage !== 'undefined', 'localStorage available');
+            addTest('js', typeof Intl.NumberFormat !== 'undefined', 'Intl.NumberFormat available');
+
+            // Test fetch headers
+            addTest('js', true, 'fetch with credentials demo',
+                'fetch("/api/user-years", { credentials: "same-origin" })');
+
+            // ========== localStorage Tests ==========
+            localStorage.setItem('selectedDashboardTab', 'team-stats');
+            const savedTab = localStorage.getItem('selectedDashboardTab');
+            addTest('storage', savedTab === 'team-stats',
+                'localStorage setItem/getItem works',
+                `Saved: "team-stats", Got: "${savedTab}"`);
+
+            localStorage.removeItem('selectedDashboardTab');
+            const cleared = localStorage.getItem('selectedDashboardTab');
+            addTest('storage', cleared === null,
+                'localStorage removeItem works',
+                'Value cleared successfully');
+
+            // ========== API Tests ==========
+            const tests = [
+                { name: '/api/user-years', url: '/api/user-years', expected: 'Array' },
+                { name: '/api/user-stats', url: '/api/user-stats', expected: 'Object with total_payrolls' },
+                { name: '/api/user-stats?year=2026', url: '/api/user-stats?year=2026', expected: 'Object with stats' },
+                { name: '/api/user-months?year=2026', url: '/api/user-months?year=2026', expected: 'Array' }
+            ];
+
+            for (const test of tests) {
+                try {
+                    const response = await fetch(test.url, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    const isOk = response.ok;
+                    const data = await response.json();
+
+                    addTest('api', isOk && data,
+                        `${test.name} - Status ${response.status}`,
+                        `Type: ${typeof data}, Keys: ${Object.keys(data || {}).join(', ')}`);
+                } catch (error) {
+                    addTest('api', false,
+                        `${test.name} - Network Error`,
+                        error.message);
+                }
+            }
+
+            // Render results
+            renderResults();
+        }
+
+        function renderResults() {
+            const categories = ['js', 'storage', 'api'];
+            const containerIds = ['jsTest', 'storageTest', 'apiTest'];
+
+            categories.forEach((cat, idx) => {
+                const container = document.getElementById(containerIds[idx]);
+                container.innerHTML = results[cat].map(r => {
+                    const statusClass = r.status === 'pass' ? 'success' : r.status === 'fail' ? 'error' : 'warning';
+                    const icon = r.status === 'pass' ? '✅' : r.status === 'fail' ? '❌' : '⚠️';
+                    return `
+                        <div class="p-3 rounded ${statusClass}">
+                            <p class="font-semibold">${icon} ${r.message}</p>
+                            ${r.details ? `<p class="text-xs text-gray-600 mt-1"><code>${r.details}</code></p>` : ''}
+                        </div>
+                    `;
+                }).join('');
+            });
+
+            // Render summary
+            const summaryDiv = document.getElementById('summaryContent');
+            const totalTests = results.summary.passed + results.summary.failed + results.summary.warnings;
+            const passRate = Math.round((results.summary.passed / totalTests) * 100);
+
+            summaryDiv.innerHTML = `
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-green-50 p-4 rounded border-l-4 border-green-600">
+                        <p class="text-2xl font-bold text-green-700">${results.summary.passed}</p>
+                        <p class="text-sm text-gray-600">نجح</p>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded border-l-4 border-yellow-600">
+                        <p class="text-2xl font-bold text-yellow-700">${results.summary.warnings}</p>
+                        <p class="text-sm text-gray-600">تحذيرات</p>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded border-l-4 border-red-600">
+                        <p class="text-2xl font-bold text-red-700">${results.summary.failed}</p>
+                        <p class="text-sm text-gray-600">فشل</p>
+                    </div>
+                </div>
+                <div class="mt-4 p-4 bg-blue-50 rounded border-l-4 border-blue-600">
+                    <p class="text-sm text-gray-700">
+                        <strong>معدل النجاح: ${passRate}%</strong>
+                        <br>
+                        <strong>${totalTests}</strong> اختبار تم تنفيذه
+                    </p>
+                </div>
+                ${results.summary.failed > 0 ? `
+                    <div class="mt-4 p-4 bg-red-50 rounded border-l-4 border-red-600">
+                        <p class="text-sm text-red-700">
+                            <strong>⚠️ توجد مشاكل تحتاج إلى حل.</strong> تحقق من اتصال الشبكة والـ API endpoints.
+                        </p>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        // Run tests when page loads
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>

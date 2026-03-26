@@ -1,3 +1,43 @@
+    // منطق الحذف المتعدد
+    // إظهار/إخفاء زر الحذف المتعدد وتحديث العداد
+    function updateMultiDeleteBar() {
+        const checked = $(".js-delete-multi:checked").length;
+        if (checked > 0) {
+            $("#multiDeleteBar").show();
+            $("#multiDeleteCount").text(checked);
+        } else {
+            $("#multiDeleteBar").hide();
+        }
+    }
+
+    // عند تغيير أي جكبكس حذف متعدد
+    $(document).on('change', '.js-delete-multi', updateMultiDeleteBar);
+
+    // عند الضغط على جكبكس الكل في رأس العمود
+    $(document).on('change', '#checkAllDeleteMulti', function() {
+        const checked = $(this).is(':checked');
+        $(".js-delete-multi").prop('checked', checked);
+        updateMultiDeleteBar();
+    });
+
+    // عند الضغط على زر الحذف المتعدد
+    $(document).on('click', '#multiDeleteBtn', function() {
+        const rows = $(".js-delete-multi:checked").closest('tr');
+        if (rows.length === 0) return;
+        if (!confirm('هل أنت متأكد من حذف الصفوف المحددة؟')) return;
+        rows.remove();
+        updateMultiDeleteBar();
+        // إلغاء تحديد جكبكس الكل إذا كان محدداً
+        $('#checkAllDeleteMulti').prop('checked', false);
+    });
+
+    // تحديث الزر عند إضافة أو حذف صفوف
+    $(document).on('DOMNodeInserted DOMNodeRemoved', '#payrollTable tbody', function() {
+        updateMultiDeleteBar();
+    });
+
+    // تحديث الزر عند تحميل الصفحة لأول مرة
+    updateMultiDeleteBar();
 // ============ payroll_manager.js - النسخة المصححة ============
 
 // ========== دوال مساعدة للتعامل مع localStorage بـ scope للمستخدم ==========
@@ -398,14 +438,13 @@ function addEmployeeToTable(employeeId, employeeText, department, jobTitle,
         lastAddedTime = now;
     }
 
-    // تنظيف اسم الموظف
-    let employeeName = employeeText;
-    if (employeeName.includes(' [')) {
-        employeeName = employeeName.split(' [')[0];
-    }
-
-    // 🔥 DEBUG: تنظيف اسم الموظف
-    console.log(`🏗️ [addEmployeeToTable] بناء صف جديد:`, {
+    // الاسم يبقى كما هو (بدون دمج العنوان الوظيفي)
+    // اسم الموظف فقط بدون أي دمج أو أقواس
+    let employeeName = employeeText.split('[')[0].trim();
+    // القسم فقط بدون أقواس أو تكرار
+    let cleanDepartment = (department || '').replace(/\[|\]/g, '').trim();
+    // DEBUG
+    console.log('[addEmployeeToTable] بناء صف جديد:', {
         employeeText: employeeText,
         employeeName: employeeName,
         employeeId: employeeId
@@ -428,12 +467,11 @@ function addEmployeeToTable(employeeId, employeeText, department, jobTitle,
         <td class="p-2 border text-right">
             <input type="hidden" class="js-employee-id" value="${employeeId}">
             <input type="hidden" class="js-name" value="${employeeName}">
-            <input type="hidden" class="js-dept" value="${department}">
+            <input type="hidden" class="js-dept" value="${cleanDepartment}">
             <input type="hidden" class="js-receipt-no" value="${receiptNo}">
             <input type="hidden" class="js-mission-type" value="${missionType}">
             <div class="font-bold text-blue-900">${employeeName}</div>
-            <div class="text-xs text-gray-500">${department}</div>
-            ${jobTitle ? `<div class="text-xs text-blue-600">${jobTitle}</div>` : ''}
+            <div class="text-xs text-gray-500">${cleanDepartment}</div>
         </td>
         <td class="p-2 border">
             <div class="relative">
@@ -487,20 +525,21 @@ function addEmployeeToTable(employeeId, employeeText, department, jobTitle,
                    value="${receipts}" min="0">
         </td>
         <td class="p-2 border font-bold text-green-700 js-total-amount">0</td>
-        <td class="p-2 border text-center">
-            <input type="checkbox" class="js-is-half w-4 h-4" ${isHalf ? 'checked' : ''}>
-        </td>
         <td class="p-2 border">
             <textarea class="js-notes w-full border-gray-300 rounded px-2 py-1 text-xs"
                       rows="1" placeholder="ملاحظات">${notes}</textarea>
+        </td>
+        <td class="p-2 border text-center">
+            <input type="checkbox" class="js-is-half w-4 h-4" ${isHalf ? 'checked' : ''}>
         </td>
         <td class="p-2 border text-center">
             <button type="button" class="js-remove-row text-red-500 hover:text-red-700 transition-colors p-1 rounded hover:bg-red-50"
                     data-row-id="${rowId}" title="حذف السطر">
                 ❌
             </button>
-            <br>
-            <input type="checkbox" class="js-delete-row-multi w-4 h-4 cursor-pointer mt-1" title="تحديد للحذف المتعدد">
+            <div>
+                <input type="checkbox" class="js-delete-multi w-4 h-4 mt-2" title="تحديد للحذف المتعدد">
+            </div>
         </td>
     </tr>`;
 
@@ -613,10 +652,6 @@ function addEmployeeToTable(employeeId, employeeText, department, jobTitle,
 
     console.log(`✅ تم إضافة ${employeeName} للجدول`);
 
-    // تحديث عداد المنتسبين بجانب العنوان
-    if (window.updateEmployeeCountLabel) {
-        window.updateEmployeeCountLabel();
-    }
     // إضافة تأثير بصري للصف الجديد
     $row.addClass('bg-green-50');
     setTimeout(() => $row.removeClass('bg-green-50'), 1000);
@@ -643,9 +678,6 @@ function removeTableRow(rowId) {
             $row.remove();
             saveToLocalStorage();
             updateTotals();
-            if (window.updateEmployeeCountLabel) {
-                window.updateEmployeeCountLabel();
-            }
         }, 300);
     }
 }
@@ -665,17 +697,6 @@ function clearAllRows() {
         }
         updateTotals();
         showNotification('تم حذف جميع البيانات', 'success');
-        if (window.updateEmployeeCountLabel) {
-            window.updateEmployeeCountLabel();
-        }
-    // عند الحذف المتعدد: تحديث عداد المنتسبين
-    $(document).on('click', '#multiDeleteBtn', function(e) {
-        setTimeout(function() {
-            if (window.updateEmployeeCountLabel) {
-                window.updateEmployeeCountLabel();
-            }
-        }, 350);
-    });
     }
 }
 
@@ -926,7 +947,7 @@ function calculateRow($row) {
         // نستخدم القيمة الفعلية من حقل المبيت (الذي تم تحديثه بالفعل ليشمل 50% إن وجدت)
         const accommodationFee = parseFloat(accFeeInput.val()) || 0;
         total = (days * totalDaily) + (nights * accommodationFee) + receipts;
-        console.log('حساب المجموع ( مدينة): (' + days + ' × ' + totalDaily + ') + (' + nights + ' × ' + accommodationFee + ') + ' + receipts + ' = ' + total);
+        console.log('حساب المجموع (مدينة): (' + days + ' × ' + totalDaily + ') + (' + nights + ' × ' + accommodationFee + ') + ' + receipts + ' = ' + total);
     }
 
     // store numeric total for reliable calculations and show localized string for display
@@ -1102,8 +1123,7 @@ function loadSavedData() {
                 }
 
                 validData.forEach(item => {
-                    const employeeText = item.name + (item.dept ? ' [' + item.dept + ']' : '');
-                    // لا تسترجع تأشير الجكبوكس للحذف المتعدد بعد التحديث
+                    const employeeText = item.name + (item.dept ? ' [' + item.dept + ']' : ''); // لا يتم دمج العنوان الوظيفي هنا أصلاً، فقط الاسم والقسم
                     addEmployeeToTable(
                         item.employeeId,
                         employeeText,
@@ -1117,10 +1137,10 @@ function loadSavedData() {
                         item.accFee,
                         item.receipts,
                         item.notes,
-                        false, // isHalf
+                        item.isHalf,
                         item.receiptNo,
-                        item.missionType || '',
-                        item.responsibilityLevel
+                        item.missionType || '',  // 🔥 احفظ missionType من البيانات المحملة
+                        item.responsibilityLevel  // 🔥 قد يكون فارغاً من البيانات القديمة
                     );
                 });
 
@@ -1328,7 +1348,7 @@ function setupFormSubmit() {
             const hasMissionLevel = !!rowData.mission_type && !!rowData.responsibility_level;
 
             if (!hasCity && !hasMissionLevel) {
-                missingFields.push('الوجهة ( مدينة أو خارج القطر + مستوى)');
+                missingFields.push('الوجهة (مدينة أو خارج القطر + مستوى)');
             }
             if (rowData.mission_type && !rowData.responsibility_level) {
                 missingFields.push('المستوى الوظيفي');
@@ -1753,7 +1773,7 @@ function handleExcelImport(data) {
         }
 
         // Passed checks — add to table
-        const employeeText = item.name + (item.dept ? ' [' + item.dept + ']' : '');
+        const employeeText = item.name + (item.dept ? ' [' + item.dept + ']' : ''); // لا يتم دمج العنوان الوظيفي هنا أصلاً، فقط الاسم والقسم
 
         // 🔥 DEBUG: قبل إضافة الموظف للجدول
         console.log(`✅ [إضافة موظف] ${item.name}:`, {
@@ -2028,48 +2048,6 @@ $(document).on('change', '#masterEndDate', function() {
 });
 
 // ============ تصدير الدوال للاستخدام في HTML ============
-
-// ============ منطق زر الحذف المتعدد ============
-function updateMultiDeleteBtn() {
-    const checkedCount = $('.js-delete-row-multi:checked').length;
-    if (checkedCount > 0) {
-        $('#multiDeleteBtn').show();
-        $('#multiDeleteCount').text(checkedCount);
-    } else {
-        $('#multiDeleteBtn').hide();
-        $('#multiDeleteCount').text('0');
-    }
-}
-
-// عند التأشير على أي checkbox للحذف المتعدد
-$(document).on('change', '.js-delete-row-multi', function() {
-    updateMultiDeleteBtn();
-});
-
-// عند تحميل الصفحة: تأكد من إخفاء الزر في البداية
-$(document).ready(function() {
-    updateMultiDeleteBtn();
-});
-
-// عند الضغط على زر الحذف المتعدد
-$(document).on('click', '#multiDeleteBtn', function(e) {
-    e.preventDefault();
-    const checkedRows = $('.js-delete-row-multi:checked').closest('tr');
-    if (checkedRows.length === 0) {
-        alert('لا توجد صفوف محددة للحذف!');
-        return;
-    }
-    if (!confirm('هل تريد حذف جميع الصفوف المؤشرة؟')) {
-        return;
-    }
-    checkedRows.each(function() {
-        $(this).remove();
-    });
-    updateMultiDeleteBtn();
-    updateTotals();
-    saveToLocalStorage();
-    showNotification('تم حذف الصفوف المؤشرة بنجاح', 'success');
-});
 
 // تعريف الدوال على الكائن window ليتم الوصول إليها من HTML
 window.removeTableRow = removeTableRow;
