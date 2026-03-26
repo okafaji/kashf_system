@@ -1,7 +1,6 @@
 <?php
-
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use App\Models\Payroll;
 use App\Models\PayrollAuditLog;
@@ -16,14 +15,21 @@ use Illuminate\Support\Facades\Schema;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Signature;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 
-
 class PayrollController extends Controller
 {
+    // تحويل رقم Excel serial date إلى نص تاريخ ميلادي
+    private function excelSerialToDate($serial)
+    {
+        if (is_numeric($serial)) {
+            $unix = ($serial - 25569) * 86400;
+            return gmdate('Y-m-d', $unix);
+        }
+        return $serial;
+    }
     private const MAX_DAYS_COUNT = 365;
     private const MAX_DAILY_ALLOWANCE = 2000000;
     private const MAX_TOTAL_AMOUNT = 100000000;
@@ -2321,68 +2327,57 @@ public function importPreview(Request $request)
             return response()->json(['error' => 'الملف فارغ'], 400);
         }
 
-        $headers = array_shift($rows) ?? []; // استخراج العناوين
 
+        $headers = array_shift($rows) ?? [];
+        $normalizedHeaders = array_map(function($h) { return trim($h); }, $headers);
+        Log::info('ExcelImportHeaders', ['headers' => $normalizedHeaders, 'rows_count' => count($rows), 'first_row' => $rows[0] ?? null]);
+
+        // فقط أعد البيانات كما هي بدون أي معالجة تخص المدن
         $previewData = [];
         $rowNumber = 1;
-
         foreach ($rows as $row) {
             $rowNumber++;
-
-            if (empty($row[0])) {
-                continue; // تخطي الصفوف الفارغة
-            }
-
-            // البحث عن المدينة - جرب بعدة طرق
-            $cityName = trim($row[3] ?? '');
-            $city = null;
-
-            if (!empty($cityName)) {
-                // البحث بالاسم الدقيق أولاً
-                $city = City::where('name', $cityName)->first();
-
-                // إذا لم يوجد، البحث الجزئي
-                if (!$city) {
-                    $city = City::where('name', 'LIKE', '%' . $cityName . '%')->first();
+            // تخطي الصفوف الفارغة (لا اسم)
+            $nameIdx = null;
+            foreach ($normalizedHeaders as $idx => $header) {
+                if (mb_strpos($header, 'اسم') !== false) {
+                    $nameIdx = $idx;
+                    break;
                 }
-
-                // إذا لم يوجد، البحث عن طريق المحافظة
-                if (!$city) {
-                    $governorate = Governorate::where('name', 'LIKE', '%' . $cityName . '%')->first();
-                    if ($governorate) {
-                        $city = City::where('governorate_id', $governorate->id)->first();
+            }
+            $nameVal = $nameIdx !== null ? ($row[$nameIdx] ?? '') : '';
+            if (empty($nameVal)) {
+                continue;
+            }
+            $item = [ 'row_number' => $rowNumber ];
+            foreach ($normalizedHeaders as $idx => $header) {
+                $value = isset($row[$idx]) ? trim((string)$row[$idx]) : '';
+                // تحويل التواريخ من serial إلى نص ميلادي فقط للأعمدة الثلاثة
+                $headerLower = mb_strtolower($header);
+                if (in_array($headerLower, ['order_date', 'تاريخه', 'تاريخ الأمر الإداري', 'start_date', 'تاريخ بدء الإيفاد', 'بدء', 'end_date', 'تاريخ انتهاء الإيفاد', 'نهاية'])) {
+                    // إذا كانت القيمة رقمية (serial)
+                    if (is_numeric($value) && $value > 1000 && $value < 900000) {
+                        $value = $this->excelSerialToDate($value);
                     }
                 }
+                $item[$header] = $value;
             }
-
-            $previewData[] = [
-                'row_number'  => $rowNumber,
-                'name'        => (string)($row[0] ?? ''),
-                'dept'        => (string)($row[1] ?? ''),
-                'job_title'   => (string)($row[2] ?? ''),
-                'city_name'   => $cityName,
-                'city_id'     => $city ? $city->id : null,
-                'order_no'    => (string)($row[4] ?? ''),
-                'order_date'  => $this->formatExcelDate($row[5] ?? null),
-                'start_date'  => $this->formatExcelDate($row[6] ?? null),
-                'end_date'    => $this->formatExcelDate($row[7] ?? null),
-                'acc_fee'     => (float)($row[8] ?? 0),
-                'receipts'    => (float)($row[9] ?? 0),
-                'notes'       => (string)($row[10] ?? ''),
-                'is_valid'    => !empty($row[0]) && !empty($row[6]) && !empty($row[7]),
-                'city_found'  => $city ? true : false
-            ];
+            Log::info('ExcelImportRow', $item);
+            $item['is_valid'] = true;
+            $previewData[] = $item;
         }
 
         if (empty($previewData)) {
+            Log::warning('ExcelImport: لم يتم العثور على بيانات صالحة', [
+                'headers' => $normalizedHeaders,
+                'rows_count' => count($rows),
+            ]);
             return response()->json(['error' => 'لم يتم العثور على بيانات صالحة في الملف'], 400);
         }
 
-        // إحصائية
         $stats = [
             'total_rows' => count($previewData),
-            'valid_rows' => count(array_filter($previewData, function($item) { return $item['is_valid']; })),
-            'cities_found' => count(array_filter($previewData, function($item) { return $item['city_found']; })),
+            'valid_rows' => count($previewData),
         ];
 
         return response()->json([
