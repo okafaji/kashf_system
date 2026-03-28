@@ -8,19 +8,24 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!-- Scripts -->
+    <!-- مكتبة SheetJS Excel - يجب أن تكون قبل أي كود جافاسكريبت آخر -->
+    <script src="/js/xlsx.full.min.js"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-        <!-- Flatpickr Date Picker -->
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
-        <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+    <!-- Flatpickr Date Picker - محلي لجميع الصفحات -->
+    <link rel="stylesheet" href="/js/flatpickr.min.css">
+    <script src="/js/flatpickr.min.js"></script>
+    <script src="/js/ar.js"></script>
 
         <!-- خط عربي كلاسيكي -->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+        <!-- خط Amiri من Google Fonts تم حذفه لتقليل الاعتماد على الإنترنت -->
 
         <style>
+                        /* شكل المؤشر في حقول التاريخ */
+                        input[type="text"][placeholder*="yyyy"] {
+                            cursor: pointer !important;
+                        }
             /* تأثير دخول هادئ للمحتوى */
             @keyframes page-fade-up {
                 from {
@@ -386,16 +391,8 @@
                 };
 
                 const fetchRemoteContent = async function () {
-                    try {
-                        const surahs = [2, 3, 4, 18, 33, 36, 55, 67, 112];
-                        const surahId = surahs[Math.floor(Math.random() * surahs.length)];
-                        const res = await fetch('https://api.alquran.cloud/v1/surah/' + surahId);
-                        if (!res.ok) { return []; }
-                        const json = await res.json();
-                        return buildQuranItemsFromPayload(json);
-                    } catch (e) {
-                        return [];
-                    }
+                    // تم تعطيل جلب بيانات من alquran.cloud لعدم توفر الإنترنت في بعض الحاسبات
+                    return [];
                 };
 
                 let tickerIntervalId = null;
@@ -592,40 +589,52 @@
                     });
                 };
 
-                // Flatpickr date picker - يعمل على جميع حقول التاريخ
-                const initFlatpickr = function () {
-                    const dateSelectors = [
-                        'input[type="text"][name*="date"]',  // name يحتوي "date"
-                        'input[type="text"][data-date-input]', // data attribute
-                        '#masterOrderDate',    // create.blade.php header
-                        '#masterStartDate',    // create.blade.php header
-                        '#masterEndDate',      // create.blade.php header
-                        '.js-order-date',      // create.blade.php table rows
-                        '.js-start-date',      // create.blade.php table rows
-                        '.js-end-date',        // create.blade.php table rows
-                        '#start_date',         // edit.blade.php
-                        '#end_date',           // edit.blade.php
-                        '#filterFromDate',     // dashboard.blade.php
-                        '#filterToDate'        // dashboard.blade.php
-                    ];
+                // Flatpickr date picker - يعمل على جميع حقول التاريخ في كل الصفحات
+                const dateSelectors = [
+                    'input[type="text"][name*="date"]',  // name يحتوي "date"
+                    'input[type="text"][data-date-input]', // data attribute
+                    'input[type="text"][placeholder*="yyyy"]', // أي حقل فيه placeholder تاريخ
+                    '#masterOrderDate',    // create.blade.php header
+                    '#masterStartDate',    // create.blade.php header
+                    '#masterEndDate',      // create.blade.php header
+                    '.js-order-date',      // create.blade.php table rows
+                    '.js-start-date',      // create.blade.php table rows
+                    '.js-end-date',        // create.blade.php table rows
+                    '#start_date',         // edit.blade.php
+                    '#end_date',           // edit.blade.php
+                    '#filterFromDate',     // dashboard.blade.php
+                    '#filterToDate'        // dashboard.blade.php
+                ];
 
+                function activateFlatpickrAll() {
                     dateSelectors.forEach(function (selector) {
                         document.querySelectorAll(selector).forEach(function (input) {
-                            // Skip if already has flatpickr instance
                             if (input._flatpickr) return;
-
-                            flatpickr(input, {
+                            window.flatpickr(input, {
                                 dateFormat: 'Y/m/d',
                                 altFormat: 'Y/m/d',
-                                altInput: false
+                                altInput: false,
+                                locale: 'ar',
+                                allowInput: true,
+                                disableMobile: true
                             });
                         });
                     });
-                };
+                }
+
+                function waitForFlatpickrAndActivate(retry) {
+                    if (window.flatpickr && typeof window.flatpickr === 'function') {
+                        activateFlatpickrAll();
+                    } else if (retry > 0) {
+                        setTimeout(function() { waitForFlatpickrAndActivate(retry-1); }, 200);
+                    } else {
+                        console.warn('flatpickr غير محمل!');
+                    }
+                }
 
                 // Initialize on page load
                 enhanceDateInputs();
-                initFlatpickr();
+                waitForFlatpickrAndActivate(20); // يحاول لمدة 4 ثواني كحد أقصى
 
                 // Re-initialize when new rows are added to the payroll table
                 if (typeof MutationObserver !== 'undefined') {
@@ -633,7 +642,7 @@
                     if (tableBody) {
                         const observer = new MutationObserver(function () {
                             enhanceDateInputs();
-                            initFlatpickr();
+                            waitForFlatpickrAndActivate(10);
                         });
                         observer.observe(tableBody, { childList: true, subtree: true });
                     }

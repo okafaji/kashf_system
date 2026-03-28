@@ -27,17 +27,52 @@
         if (!confirm('هل أنت متأكد من حذف الصفوف المحددة؟')) return;
         rows.remove();
         updateMultiDeleteBar();
+        updateEmployeeCount();
         // إلغاء تحديد جكبكس الكل إذا كان محدداً
         $('#checkAllDeleteMulti').prop('checked', false);
     });
 
     // تحديث الزر عند إضافة أو حذف صفوف
+    function updateEmployeeCount() {
+        const count = $('#payrollTable tbody tr').length;
+        let label = '';
+        if (count === 0) {
+            label = '(0 منتسب)';
+        } else if (count === 1) {
+            label = '(1 منتسب)';
+        } else if (count === 2) {
+            label = '(2 منتسبين)';
+        } else if (count >= 3 && count <= 10) {
+            label = `(${count} منتسبين)`;
+        } else {
+            label = `(${count} منتسب)`;
+        }
+        $('#employeeCountLabel').text(label);
+    // نهاية الدالة بدون قوس زائد
+
+// تفعيل flatpickr العصري على جميع حقول التواريخ
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.flatpickr) {
+        flatpickr('input[type="text"][placeholder*="yyyy/mm/dd"]', {
+            dateFormat: 'Y/m/d',
+            locale: 'ar',
+            allowInput: true,
+            disableMobile: true
+        });
+    } else {
+        console.warn('flatpickr غير محمل!');
+    }
+});
+    }
+
     $(document).on('DOMNodeInserted DOMNodeRemoved', '#payrollTable tbody', function() {
         updateMultiDeleteBar();
+        updateEmployeeCount();
     });
 
-    // تحديث الزر عند تحميل الصفحة لأول مرة
+    // تحديث العداد عند تحميل الصفحة لأول مرة
     updateMultiDeleteBar();
+    updateEmployeeCount();
 // ============ payroll_manager.js - النسخة المصححة ============
 
 // ========== دوال مساعدة للتعامل مع localStorage بـ scope للمستخدم ==========
@@ -131,6 +166,10 @@ function cleanupCorruptedData() {
 }
 
 // ========== المتغيرات العامة ==========
+// ====== استيراد ديناميكي من اكسل2 ======
+$(document).ready(function() {
+// نقل ربط حدث استيراد اكسل2 إلى setupEvents
+});
 var lastAddedEmployeeId = null;
 var lastAddedTime = 0;
 var isSubmitting = false; // لمنع الإرسال المتعدد
@@ -427,8 +466,8 @@ function addEmployeeToTable(employeeId, employeeText, department, jobTitle,
                            startDate = '', endDate = '', accFee = 0,
                            receipts = 0, notes = '', isHalf = false, receiptNo = '', missionType = '', responsibilityLevel = '') {
 
-    // منع الإضافة المتكررة لنفس الموظف (معطل أثناء الاستيراد الجماعي)
-    if (!isBulkImporting) {
+    // تعطيل منطق منع التكرار نهائياً أثناء الاستيراد الجماعي أو إذا employeeId فارغ (اكسل2)
+    if (!isBulkImporting && employeeId) {
         const now = Date.now();
         if (lastAddedEmployeeId === employeeId && (now - lastAddedTime) < 1500) {
             console.warn('⚠️ تم تجاهل إضافة مكررة لنفس الموظف');
@@ -505,10 +544,10 @@ function addEmployeeToTable(employeeId, employeeText, department, jobTitle,
                    placeholder="yyyy/mm/dd" title="صيغة التاريخ: yyyy/mm/dd" ${orderDate ? `value="${orderDate}"` : (today ? `value="${today}"` : '')}>
         </td>
         <td class="p-2 border text-xs">
-            <input type="text" class="js-start-date w-full border-gray-200 rounded px-1 py-0.5 mb-1" style="font-size: 11px; color: #2563eb;"
-                   placeholder="yyyy/mm/dd" title="صيغة التاريخ: yyyy/mm/dd" ${startDate ? `value="${startDate}"` : ''}>
-            <input type="text" class="js-end-date w-full border-gray-200 rounded px-1 py-0.5" style="font-size: 11px; color: #2563eb;"
-                   placeholder="yyyy/mm/dd" title="صيغة التاريخ: yyyy/mm/dd" ${endDate ? `value="${endDate}"` : ''}>>
+                 <input type="text" class="js-start-date w-full border-gray-200 rounded px-1 py-0.5 mb-1" style="font-size: 11px; color: #2563eb;"
+                     placeholder="yyyy/mm/dd" title="صيغة التاريخ: yyyy/mm/dd" ${startDate ? `value="${startDate}"` : ''}>
+                 <input type="text" class="js-end-date w-full border-gray-200 rounded px-1 py-0.5" style="font-size: 11px; color: #2563eb;"
+                     placeholder="yyyy/mm/dd" title="صيغة التاريخ: yyyy/mm/dd" ${endDate ? `value="${endDate}"` : ''}>
         </td>
         <td class="p-2 border text-center font-bold text-blue-800 js-days-count" style="font-size: 13px;">0</td>
         <td class="p-2 border">
@@ -544,6 +583,7 @@ function addEmployeeToTable(employeeId, employeeText, department, jobTitle,
     </tr>`;
 
     $('#payrollTable tbody').append(newRow);
+    updateEmployeeCount();
 
     // الحصول على المرجع للصف المضاف حديثاً
     const $row = $(`#${rowId}`);
@@ -678,6 +718,7 @@ function removeTableRow(rowId) {
             $row.remove();
             saveToLocalStorage();
             updateTotals();
+            updateEmployeeCount();
         }, 300);
     }
 }
@@ -696,6 +737,7 @@ function clearAllRows() {
             localStorage.removeItem('payroll_draft:' + window.currentUserId);
         }
         updateTotals();
+        updateEmployeeCount();
         showNotification('تم حذف جميع البيانات', 'success');
     }
 }
@@ -1183,6 +1225,7 @@ function loadSavedData() {
                 saveToLocalStorage();
                 hasDataLoaded = true;
                 console.log(`✅ تم تحميل ${data.length} سجل من التخزين المحلي`);
+                updateEmployeeCount();
             } else {
                 // إذا رفض المستخدم، لا تحذف البيانات - احتفظ بها محفوظة
                 hasDataLoaded = true;
@@ -1198,6 +1241,104 @@ function loadSavedData() {
 }
 
 function setupEvents() {
+        // ربط حدث استيراد اكسل2 مرة واحدة فقط
+        $('#excel2_input').off('change').on('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (!window.XLSX || !window.XLSX.read) {
+                    alert('❌ مكتبة Excel (SheetJS) غير محملة أو غير معرفة!\nتأكد من وجود ملف xlsx.full.min.js في مجلد js وارتباطه في الصفحة قبل أي كود استيراد.');
+                    return;
+                }
+                const data = new Uint8Array(e.target.result);
+                const workbook = window.XLSX.read(data, {type: 'array'});
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = window.XLSX.utils.sheet_to_json(sheet, {header:1, defval: ''});
+                if (!rows || rows.length < 2) {
+                    alert('الملف فارغ أو غير صالح');
+                    return;
+                }
+
+                const headers = rows[0].map(h => (h || '').toString().trim());
+                const requiredHeaders = ["اسم","قسم","امر","تاريخ","عنوان","بدء","نهاية","جهة","وصل","ملاحظة"];
+                const missing = requiredHeaders.filter(h => !headers.includes(h));
+                if (missing.length > 0) {
+                    alert('الأعمدة الناقصة: ' + missing.join('، '));
+                    return;
+                }
+
+                const idx = {};
+                requiredHeaders.forEach(h => { idx[h] = headers.indexOf(h); });
+                const sectionName = (rows[1][idx["قسم"]] || '').trim();
+                if (!sectionName) {
+                    alert('اسم القسم غير موجود في العمود قسم');
+                    return;
+                }
+
+                let added = 0, errors = 0, errorRows = [];
+                window.isBulkImporting = true; // تعطيل فحص التكرار أثناء الاستيراد
+                for (let i = 1; i < rows.length; ++i) {
+                    const row = rows[i];
+                    if (!row[idx["اسم"]] || row[idx["اسم"]].toString().trim() === '') continue;
+                    try {
+                        // مطابقة جهة الإيفاد مع الخيارات المتاحة
+                        let cityVal = (row[idx["جهة"]] || '').trim();
+                        let cityOption = null;
+                        $("#cities_source option").each(function() {
+                            const optText = $(this).text().replace(/\s+/g, '').replace(/-/g, '').replace(/ة/g, 'ه').replace(/أ|إ|آ/g, 'ا');
+                            const cityNorm = cityVal.replace(/\s+/g, '').replace(/-/g, '').replace(/ة/g, 'ه').replace(/أ|إ|آ/g, 'ا');
+                            if (optText.includes(cityNorm) || cityNorm.includes(optText)) {
+                                cityOption = $(this).val(); return false;
+                            }
+                        });
+                        if (!cityOption) cityOption = '';
+
+                        // معالجة التواريخ لصيغة yyyy/mm/dd
+                        function fixDate(val) {
+                            if (!val) return '';
+                            if (typeof val === 'string' && val.match(/^\d{4}[-\/]\d{1,2}[-\/]\d{1,2}$/)) {
+                                return val.replace(/-/g, '/');
+                            }
+                            if (typeof val === 'number') {
+                                // Excel date number
+                                const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+                                return d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0');
+                            }
+                            return val;
+                        }
+
+                        addEmployeeToTable(
+                            '',
+                            row[idx["اسم"]],
+                            sectionName,
+                            row[idx["عنوان"]],
+                            cityOption,
+                            row[idx["امر"]],
+                            fixDate(row[idx["تاريخ"]]),
+                            fixDate(row[idx["بدء"]]),
+                            fixDate(row[idx["نهاية"]]),
+                            '',
+                            row[idx["وصل"]],
+                            row[idx["ملاحظة"]],
+                            false,
+                            '',
+                            '',
+                            ''
+                        );
+                        added++;
+                    } catch (err) {
+                        errors++;
+                        errorRows.push(i+1);
+                    }
+                }
+                window.isBulkImporting = false;
+                alert('✅ تم استيراد ' + added + ' اسم' + (errors ? ('\n❌ أخطاء في الصفوف: ' + errorRows.join(',')) : ''));
+            };
+            reader.readAsArrayBuffer(file);
+            // إعادة تعيين قيمة input للسماح باستيراد نفس الملف مرة أخرى
+            $(this).val('');
+        });
     console.log('🔥 setupEvents() بدأ - نسجل معالجات الأحداث');
 
     // إزالة الأحداث السابقة لمنع التكرار

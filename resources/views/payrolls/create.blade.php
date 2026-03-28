@@ -11,6 +11,31 @@
                 <button type="button" onclick="document.getElementById('excel_input').click()" class="bg-green-600 hover:bg-green-700 text-white h-10 w-36 rounded shadow flex items-center justify-center text-sm">
                     📥 استيراد إكسل
                 </button>
+                <button type="button" id="excel2_btn" class="bg-green-600 hover:bg-green-700 text-white h-10 w-36 rounded shadow flex items-center justify-center text-sm ml-2">
+                    📥 استيراد من اكسل2
+                </button>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var btn2 = document.getElementById('excel2_btn');
+                        if (btn2) {
+                            btn2.addEventListener('click', function() {
+                                document.getElementById('excel2_input').click();
+                            });
+                        }
+                    });
+                </script>
+                        <input type="file" id="excel2_input" class="hidden" accept=".xlsx, .xls">
+                        <button type="button" id="excel2_btn" class="d-none"></button>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                var btn2 = document.getElementById('excel2_btn');
+                                if (btn2) {
+                                    btn2.addEventListener('click', function() {
+                                        document.getElementById('excel2_input').click();
+                                    });
+                                }
+                            });
+                        </script>
                 <input type="file" id="excel_input" class="hidden" accept=".xlsx, .xls">
                 <button type="button" onclick="clearAllRows()" class="bg-red-600 hover:bg-red-700 text-white h-10 w-36 rounded text-sm font-bold shadow-sm">
                     🗑️ حذف الكل
@@ -20,12 +45,38 @@
                 </button>
             </div>
             <div style="margin-top: 10px; text-align: right;">
-                <label for="employee_search" class="block text-sm font-medium text-gray-700 mb-1">ابحث عن المنتسب:</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label for="employee_search" class="block text-sm font-medium text-gray-700 mb-1">ابحث عن المنتسب:</label>
+                    <span id="employeeCountLabel" style="font-size: 13px; color: #2563eb; font-weight: bold; background: #f3f4f6; border-radius: 6px; padding: 2px 10px;">(0 منتسب)</span>
+                </div>
                 <select id="employee_search" style="width: 320px;"></select>
             </div>
         </div>
     </x-slot>
 
+    <script>
+        // تحميل مكتبة xlsx.full.min.js بمسار ديناميكي حسب الدومين أو الآيبي
+        var sheetjsScript = document.createElement('script');
+        sheetjsScript.src = window.location.protocol + '//' + window.location.host + '/js/xlsx.full.min.js';
+        sheetjsScript.onload = function() {
+            if (typeof window.XLSX === 'undefined') {
+                alert('مكتبة Excel (SheetJS) غير متوفرة محلياً! يرجى رفع js/xlsx.full.min.js إلى السيرفر.');
+            }
+        };
+        sheetjsScript.onerror = function() {
+            alert('تعذر تحميل مكتبة Excel (SheetJS)! تحقق من وجود js/xlsx.full.min.js على السيرفر.');
+        };
+        document.head.appendChild(sheetjsScript);
+    </script>
+    <!-- flatpickr datepicker العصري -->
+    <link rel="stylesheet" href="/js/flatpickr.min.css">
+        <style>
+            input[type="text"][placeholder*="yyyy/mm/dd"] {
+                cursor: pointer;
+            }
+        </style>
+    <script src="/js/flatpickr.min.js"></script>
+    <script src="/js/ar.js"></script>
     <script>
         // تعريف معرّف المستخدم الحالي ليستخدم في localStorage scope
         window.currentUserId = {{ Auth::id() }};

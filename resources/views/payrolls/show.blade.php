@@ -1,7 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
-        <div style="display: flex; justify-content: space-between; align-items: center; direction: rtl;">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <div style="height: 80px;"></div>
+        <div id="floatingToolbar" dir="rtl"
+            style="position: fixed; top: 80px; right: 30px; left: 30px; z-index: 1000; background: #fff; border: 1px solid #ccc; border-radius: 10px; box-shadow: 0 2px 8px #0002; padding: 12px 24px; min-width: 350px; max-width: 98vw; display: flex; justify-content: space-between; align-items: center;">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight" style="margin: 0;">
                 تفاصيل الكشف رقم: {{ $kashf_no }}
             </h2>
             <div class="flex gap-2">
@@ -21,7 +23,7 @@
         </div>
     </x-slot>
 
-    <div class="py-8">
+    <div class="py-8" style="margin-top: 120px;">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- متغير JavaScript لحفظ بيانات معدلات الإيفاد -->
             <script>
