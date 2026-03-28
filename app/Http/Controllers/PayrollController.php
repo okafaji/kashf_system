@@ -432,16 +432,19 @@ class PayrollController extends Controller
             $orderYear = date('Y');
         }
 
+        // السماح بالتكرار داخل نفس الكشف فقط أو إذا اختلفت السنة
         $existingPayroll = Payroll::where('admin_order_no', $request->admin_order_no)
             ->where('order_year', $orderYear)
+            ->where('kashf_no', '!=', $request->kashf_no)
             ->first();
 
         if ($existingPayroll) {
-            Log::warning('تم العثور على تكرار لرقم الأمر الإداري في نفس السنة.', [
+            Log::warning('تم العثور على تكرار لرقم الأمر الإداري في نفس السنة خارج نفس الكشف.', [
                 'admin_order_no' => $request->admin_order_no,
-                'order_year' => $orderYear
+                'order_year' => $orderYear,
+                'kashf_no' => $request->kashf_no,
             ]);
-            return redirect()->back()->withErrors(['admin_order_no' => 'رقم الأمر الإداري ' . $request->admin_order_no . ' موجود بالفعل في السنة ' . $orderYear . '!']);
+            return redirect()->back()->withErrors(['admin_order_no' => 'رقم الأمر الإداري ' . $request->admin_order_no . ' موجود بالفعل في السنة ' . $orderYear . ' في كشف آخر!']);
         }
     }
 
@@ -833,6 +836,23 @@ public function update(Request $request, $id) {
     $adminOrderDateChanged = $request->admin_order_date !== $payroll->admin_order_date;
 
     if (!empty($request->admin_order_no) && $request->admin_order_no !== 'بدون' && ($adminOrderNoChanged || $adminOrderDateChanged)) {
+        // Log تشخيصي مفصل
+        try {
+            $orderYear = \Carbon\Carbon::parse($request->admin_order_date ?? now())->year;
+        } catch (\Exception $e) {
+            $orderYear = date('Y');
+        }
+        Log::info('تشخيص تكرار رقم الأمر الإداري عند التعديل', [
+            'payroll_id' => $payroll->id,
+            'request_admin_order_no' => $request->admin_order_no,
+            'request_admin_order_date' => $request->admin_order_date,
+            'orderYear' => $orderYear,
+            'request_kashf_no' => $request->kashf_no,
+            'payroll_kashf_no' => $payroll->kashf_no,
+            'payroll_order_year' => $payroll->order_year,
+            'payroll_admin_order_no' => $payroll->admin_order_no,
+            'payroll_admin_order_date' => $payroll->admin_order_date,
+        ]);
         // استخراج السنة من تاريخ الأمر الإداري
         try {
             $orderYear = \Carbon\Carbon::parse($request->admin_order_date ?? now())->year;
@@ -840,17 +860,26 @@ public function update(Request $request, $id) {
             $orderYear = date('Y');
         }
 
+        // السماح بالتكرار إذا كان السطر الجاري تعديله في نفس الكاشف فقط أو إذا اختلفت السنة
+        $effectiveKashfNo = $request->kashf_no ?? $payroll->kashf_no;
         $existingPayroll = Payroll::where('admin_order_no', $request->admin_order_no)
             ->where('order_year', $orderYear)
             ->where('id', '!=', $id)
+            ->where('kashf_no', '!=', $effectiveKashfNo)
             ->first();
 
         if ($existingPayroll) {
-            Log::warning('تم العثور على تكرار لرقم الأمر الإداري عند التحديث.', [
+            Log::warning('تم العثور على تكرار لرقم الأمر الإداري عند التحديث خارج نفس الكشف.', [
                 'admin_order_no' => $request->admin_order_no,
-                'order_year' => $orderYear
+                'order_year' => $orderYear,
+                'kashf_no' => $request->kashf_no,
+                'existing_kashf_no' => $existingPayroll->kashf_no,
             ]);
-            return redirect()->back()->withErrors(['admin_order_no' => 'رقم الأمر الإداري ' . $request->admin_order_no . ' موجود بالفعل في السنة ' . $orderYear . '!']);
+            return redirect()->back()->withErrors([
+                'admin_order_no' => 'رقم الأمر الإداري ' . $request->admin_order_no .
+                    ' موجود بالفعل في السنة ' . $orderYear .
+                    ' في كشف آخر (رقم الكشف: ' . $existingPayroll->kashf_no . ')!'
+            ]);
         }
     }
 
