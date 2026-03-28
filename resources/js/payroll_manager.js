@@ -165,11 +165,13 @@ document.addEventListener('DOMContentLoaded', function() {
  * @returns {string} المفتاح بصيغة payroll_draft:<userId> أو payroll_draft للسقوط العكسي
  */
 function getStorageKey() {
-    if (window.currentUserId) {
+    if (typeof window.currentUserId !== 'undefined' && window.currentUserId !== null) {
         return `payroll_draft:${window.currentUserId}`;
     }
-    // السقوط العكسي للمفتاح العام إذا لم يكن userId متاحاً
-    console.warn('⚠️ currentUserId غير متاح - استخدام المفتاح العام');
+    // السقوط العكسي للمفتاح العام فقط إذا كان غير معرف نهائياً
+    if (typeof window.currentUserId === 'undefined') {
+        console.warn('⚠️ currentUserId غير متاح - استخدام المفتاح العام');
+    }
     return 'payroll_draft';
 }
 
