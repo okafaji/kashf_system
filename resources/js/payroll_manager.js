@@ -1,3 +1,86 @@
+    // ================================
+    // منطق مخصص للتحكم في زيادة/نقصان الحقول الرقمية
+    // كل ضغطة سهم أو عجلة أو زر ماوس: +1000 أو -500 فقط
+    // ينطبق على جميع input[type=number] في النظام
+    // ================================
+    function customNumberChange(input, delta) {
+        if (input.readOnly || input.disabled) return;
+        let val = parseFloat(input.value) || 0;
+        val += delta;
+        if (val < 0) val = 0;
+        input.value = val;
+        $(input).trigger('input').trigger('change');
+        console.log('🔢 تغيير رقمي مخصص:', val, input, 'delta:', delta);
+        // إعادة ضبط step بعد التغيير
+        input.setAttribute('step', 'any');
+    }
+
+    // keydown للأسهم
+    $(document).on('keydown', 'input[type="number"]', function(e) {
+        if (e.shiftKey || e.ctrlKey || e.altKey) return;
+        if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            customNumberChange(this, 1000);
+        }
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            customNumberChange(this, -500);
+        }
+    });
+    // wheel (عجلة الماوس) مع passive: false
+    function customWheelHandler(e) {
+        if (this.readOnly || this.disabled) return;
+        e.preventDefault();
+        if (e.deltaY < 0) {
+            customNumberChange(this, 1000);
+        } else {
+            console.log('⬇️ محاولة تنقيص بالسكرول', this.value);
+            customNumberChange(this, -500);
+        }
+    }
+    // تسجيل الحدث عند كل إدراج حقل رقمي جديد أو عند الجاهزية
+    function attachCustomWheelHandler(input) {
+        input.removeEventListener('wheel', customWheelHandler); // منع التكرار
+        input.addEventListener('wheel', customWheelHandler, { passive: false });
+    }
+    $(function(){
+        $('input[type="number"]').each(function(){
+            attachCustomWheelHandler(this);
+        });
+    });
+    // عند إضافة صفوف جديدة أو حقول رقمية ديناميكيًا
+    $(document).on('focus', 'input[type="number"]', function() {
+        this.setAttribute('step', 'any');
+        attachCustomWheelHandler(this);
+    });
+    // mouseup على الأسهم (زر الماوس)
+    $(document).on('mouseup', 'input[type="number"]', function(e) {
+        // نتحقق إذا كان الزر على السهم وليس في الحقل نفسه
+        // نستخدم setTimeout لأن المتصفح يغير القيمة بعد الحدث مباشرة
+        const input = this;
+        setTimeout(function() {
+            // نحدد آخر قيمة
+            let last = parseFloat(input.value) || 0;
+            // إذا كان آخر تغيير كان +1 أو -1، نعدله
+            if (last % 1000 !== 0 && last % 500 !== 0) {
+                // إذا زاد 1 نزيد 999، إذا نقص 1 ننقص 499
+                if (e.button === 0) {
+                    // زر اليسار
+                    if (last > 0 && last < 1000) {
+                        customNumberChange(input, 1000 - last);
+                    } else if (last > 0 && last % 1000 !== 0) {
+                        customNumberChange(input, 1000 - (last % 1000));
+                    } else if (last < 0) {
+                        input.value = 0;
+                    }
+                }
+            }
+        }, 10);
+    });
+    // عند التركيز على أي حقل رقمي، نضبط step=any
+    $(document).on('focus', 'input[type="number"]', function() {
+        this.setAttribute('step', 'any');
+    });
     // منطق الحذف المتعدد
     // إظهار/إخفاء زر الحذف المتعدد وتحديث العداد
     function updateMultiDeleteBar() {
@@ -1241,10 +1324,19 @@ function loadSavedData() {
 }
 
 function setupEvents() {
-        // ربط حدث استيراد اكسل2 مرة واحدة فقط
+        // حماية من تكرار نافذة اختيار الملف
+        window.isExcel2DialogOpen = false;
         $('#excel2_input').off('change').on('change', function(e) {
+            if (window.isExcel2DialogOpen) {
+                console.warn('⚠️ محاولة استيراد متكررة تم منعها');
+                return;
+            }
+            window.isExcel2DialogOpen = true;
             const file = e.target.files[0];
-            if (!file) return;
+            if (!file) {
+                window.isExcel2DialogOpen = false;
+                return;
+            }
             const reader = new FileReader();
             reader.onload = function(e) {
                 if (!window.XLSX || !window.XLSX.read) {
@@ -1334,6 +1426,9 @@ function setupEvents() {
                 }
                 window.isBulkImporting = false;
                 alert('✅ تم استيراد ' + added + ' اسم' + (errors ? ('\n❌ أخطاء في الصفوف: ' + errorRows.join(',')) : ''));
+            
+                // ...باقي الكود كما هو...
+                window.isExcel2DialogOpen = false;
             };
             reader.readAsArrayBuffer(file);
             // إعادة تعيين قيمة input للسماح باستيراد نفس الملف مرة أخرى

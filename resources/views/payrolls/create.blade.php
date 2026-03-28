@@ -14,28 +14,18 @@
                 <button type="button" id="excel2_btn" class="bg-green-600 hover:bg-green-700 text-white h-10 w-36 rounded shadow flex items-center justify-center text-sm ml-2">
                     📥 استيراد من اكسل2
                 </button>
+                <input type="file" id="excel2_input" class="hidden" accept=".xlsx, .xls">
                 <script>
                     document.addEventListener('DOMContentLoaded', function() {
                         var btn2 = document.getElementById('excel2_btn');
                         if (btn2) {
                             btn2.addEventListener('click', function() {
+                                console.log('🟢 فتح نافذة اختيار ملف Excel2');
                                 document.getElementById('excel2_input').click();
                             });
                         }
                     });
                 </script>
-                        <input type="file" id="excel2_input" class="hidden" accept=".xlsx, .xls">
-                        <button type="button" id="excel2_btn" class="d-none"></button>
-                        <script>
-                            document.addEventListener('DOMContentLoaded', function() {
-                                var btn2 = document.getElementById('excel2_btn');
-                                if (btn2) {
-                                    btn2.addEventListener('click', function() {
-                                        document.getElementById('excel2_input').click();
-                                    });
-                                }
-                            });
-                        </script>
                 <input type="file" id="excel_input" class="hidden" accept=".xlsx, .xls">
                 <button type="button" onclick="clearAllRows()" class="bg-red-600 hover:bg-red-700 text-white h-10 w-36 rounded text-sm font-bold shadow-sm">
                     🗑️ حذف الكل
