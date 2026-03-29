@@ -1,7 +1,6 @@
 <x-app-layout>
-    <!-- المحتوى الرئيسي -->
-    <div class="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-        <div class="flex items-center justify-between mb-4">
+    <x-slot name="header">
+        <x-floating-toolbar :title="'لوحة التحكم الرئيسية'">
             <div class="flex items-center gap-4">
                 <h3 class="text-lg font-semibold text-gray-900">⚡ اختصارات سريعة</h3>
                 <div class="flex items-center gap-2 bg-white px-3 py-1 rounded-lg border border-blue-300">
@@ -12,9 +11,16 @@
                     <span class="text-xs text-gray-500">|</span>
                     <span class="text-xs font-semibold text-gray-700">🕐 <span id="dashboardTime">{{ date('H:i') }}</span></span>
                 </div>
+                <span class="text-xs font-semibold text-blue-600 bg-blue-100 px-3 py-1 rounded-full">4 وظائف رئيسية</span>
+                <button type="button" onclick="if(window.history.length > 1){window.history.back();}else{window.location='{{ url('/') }}';}"
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-semibold px-4 py-2 rounded">
+                    ← رجوع
+                </button>
             </div>
-            <span class="text-xs font-semibold text-blue-600 bg-blue-100 px-3 py-1 rounded-full">4 وظائف رئيسية</span>
-        </div>
+        </x-floating-toolbar>
+    </x-slot>
+    <!-- المحتوى الرئيسي -->
+    <div class="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
             <!-- Add New Payroll -->

@@ -9,51 +9,50 @@
                 </div>
             @endif
 
-                        <!-- القائمة العائمة: بحث وتصفية وإضافة -->
-                        <div class="sticky top-20 z-50 w-full" dir="rtl" style="margin-top: 10px;">
-                        <div class="sticky top-20 z-50 w-full" dir="rtl" style="margin-top: 10px;">
-                            <form action="{{ route('payrolls.index') }}" method="GET" data-no-sticky-actions>
-                                <div class="bg-white rounded-lg shadow-lg p-3 mb-2 border border-gray-300 w-full max-w-full" style="box-shadow:0 4px 24px 0 rgba(0,0,0,0.10);">
-                                    <div class="flex flex-wrap gap-2 items-center w-full">
-                                        <a href="{{ route('payrolls.create') }}"
-                                            onclick="localStorage.removeItem('draft_payroll');"
-                                            class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-sm text-white hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150 min-w-max">
-                                            إضافة كشف جديد +
-                                        </a>
-                                        <input type="text" name="search" class="border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm w-52 min-w-52 text-sm" placeholder="بحث عام (رقم أمر/كشف/اسم)..." value="{{ $filters['search'] ?? '' }}">
-                                        <input type="text" name="admin_order_no" class="border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm w-40 min-w-40 text-sm" placeholder="رقم الأمر الإداري" value="{{ $filters['admin_order_no'] ?? '' }}">
-                                        <select name="department" class="border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm w-36 min-w-36 text-sm">
-                                            <option value="">كل الأقسام</option>
-                                            @foreach(($departmentOptions ?? collect()) as $department)
-                                                <option value="{{ $department }}" @selected(($filters['department'] ?? '') === $department)>{{ $department }}</option>
-                                            @endforeach
-                                        </select>
-                                        <select name="status" class="border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm w-32 min-w-32 text-sm">
-                                            <option value="">كل الحالات</option>
-                                            @foreach(($statusOptions ?? []) as $statusKey => $statusLabel)
-                                                <option value="{{ $statusKey }}" @selected(($filters['status'] ?? '') === $statusKey)>{{ $statusLabel }}</option>
-                                            @endforeach
-                                        </select>
-                                        <input type="text" name="from_date" value="{{ $filters['from_date'] ?? '' }}" placeholder="yyyy/mm/dd" class="border-gray-300 rounded-md shadow-sm w-32 min-w-32 text-sm">
-                                        <input type="text" name="to_date" value="{{ $filters['to_date'] ?? '' }}" placeholder="yyyy/mm/dd" class="border-gray-300 rounded-md shadow-sm w-32 min-w-32 text-sm">
-                                        <select name="created_by" class="border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm w-36 min-w-36 text-sm">
-                                            <option value="">كل المستخدمين</option>
-                                            @foreach(($creatorOptions ?? collect()) as $creator)
-                                                <option value="{{ $creator->id }}" @selected((string)($filters['created_by'] ?? '') === (string)$creator->id)>{{ $creator->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        <div class="flex flex-col items-center min-w-48">
-                                            <label class="block text-xs font-medium text-gray-700 mb-1">بحث بالاسم الكامل</label>
-                                            <select id="payroll_name_search" class="w-full min-w-48"></select>
-                                            <p class="text-xs text-gray-500 mt-1">اختر الاسم الكامل من الاقتراحات لعرض الاحصائيات.</p>
-                                        </div>
-                                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-sm text-white hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition ease-in-out duration-150 whitespace-nowrap">بحث</button>
-                                        <a href="{{ route('payrolls.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-300 border border-transparent rounded-md font-semibold text-sm text-gray-700 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 transition ease-in-out duration-150 whitespace-nowrap">إعادة ضبط</a>
-                                    </div>
-                                </div>
-                                <hr class="my-0 mb-2 border-gray-200">
-                            </form>
-                        </div>
+            <!-- شريط الأدوات العائم الموحد -->
+            <x-floating-toolbar :title="'سجل الكشوفات'" style="margin-top:32px;">
+                <form action="{{ route('payrolls.index') }}" method="GET" class="flex flex-wrap gap-2 items-center w-full" style="margin-bottom:0;">
+                    <a href="{{ route('payrolls.create') }}"
+                        onclick="localStorage.removeItem('draft_payroll');"
+                        class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-sm text-white hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150 min-w-max">
+                        إضافة كشف جديد +
+                    </a>
+                    <input type="text" name="search" class="border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm w-52 min-w-52 text-sm" placeholder="بحث عام (رقم أمر/كشف/اسم)..." value="{{ $filters['search'] ?? '' }}">
+                    <input type="text" name="admin_order_no" class="border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm w-40 min-w-40 text-sm" placeholder="رقم الأمر الإداري" value="{{ $filters['admin_order_no'] ?? '' }}">
+                    <select name="department" class="border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm w-36 min-w-36 text-sm">
+                        <option value="">كل الأقسام</option>
+                        @foreach(($departmentOptions ?? collect()) as $department)
+                            <option value="{{ $department }}" @selected(($filters['department'] ?? '') === $department)>{{ $department }}</option>
+                        @endforeach
+                    </select>
+                    <select name="status" class="border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm w-32 min-w-32 text-sm">
+                        <option value="">كل الحالات</option>
+                        @foreach(($statusOptions ?? []) as $statusKey => $statusLabel)
+                            <option value="{{ $statusKey }}" @selected(($filters['status'] ?? '') === $statusKey)>{{ $statusLabel }}</option>
+                        @endforeach
+                    </select>
+                    <input type="text" name="from_date" value="{{ $filters['from_date'] ?? '' }}" placeholder="yyyy/mm/dd" class="border-gray-300 rounded-md shadow-sm w-32 min-w-32 text-sm">
+                    <input type="text" name="to_date" value="{{ $filters['to_date'] ?? '' }}" placeholder="yyyy/mm/dd" class="border-gray-300 rounded-md shadow-sm w-32 min-w-32 text-sm">
+                    <select name="created_by" class="border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm w-36 min-w-36 text-sm">
+                        <option value="">كل المستخدمين</option>
+                        @foreach(($creatorOptions ?? collect()) as $creator)
+                            <option value="{{ $creator->id }}" @selected((string)($filters['created_by'] ?? '') === (string)$creator->id)>{{ $creator->name }}</option>
+                        @endforeach
+                    </select>
+                    <div class="flex flex-col items-center min-w-48">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">بحث بالاسم الكامل</label>
+                        <select id="payroll_name_search" class="w-full min-w-48"></select>
+                        <p class="text-xs text-gray-500 mt-1">اختر الاسم الكامل من الاقتراحات لعرض الاحصائيات.</p>
+                    </div>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-sm text-white hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition ease-in-out duration-150 whitespace-nowrap">بحث</button>
+                    <a href="{{ route('payrolls.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-300 border border-transparent rounded-md font-semibold text-sm text-gray-700 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 transition ease-in-out duration-150 whitespace-nowrap">إعادة ضبط</a>
+                    <button type="button" onclick="if(window.history.length > 1){window.history.back();}else{window.location='{{ route('dashboard') }}';}"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-semibold px-4 py-2 rounded">
+                        ← رجوع
+                    </button>
+
+                </form>
+            </x-floating-toolbar>
             @if(session('error'))
                 <div class="bg-red-100 border-r-4 border-red-500 text-red-700 p-4 mb-4 shadow-sm text-right" dir="rtl">
                     {{ session('error') }}

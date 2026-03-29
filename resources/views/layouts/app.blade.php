@@ -166,15 +166,55 @@
                     animation: none !important;
                 }
             }
+
+            /* شريط الأدوات العائم الموحد */
+            .floating-toolbar-container {
+                display: flex;
+                justify-content: center;
+                margin-top: 10px; /* ربع سانتيم تقريباً */
+                margin-bottom: 10px;
+                z-index: 1000;
+            }
+            .floating-toolbar {
+                background: #fff;
+                border: 1px solid #e5e7eb;
+                border-radius: 12px;
+                box-shadow: 0 2px 8px #0002;
+                padding: 12px 24px;
+                min-width: 350px;
+                max-width: 98vw;
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+            }
+            .floating-toolbar h2, .floating-toolbar h3 {
+                margin: 0;
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: #374151;
+            }
+            .floating-toolbar .text-[11px] {
+                font-size: 11px;
+            }
+            .floating-toolbar button, .floating-toolbar a {
+                margin-right: 0;
+                margin-left: 0;
+            }
+            @media (max-width: 600px) {
+                .floating-toolbar {
+                    padding: 8px 6px;
+                }
+            }
         </style>
     </head>
     <body class="font-sans antialiased pb-12">
         <div class="min-h-screen bg-gray-100">
             @include('layouts.navigation')
-
             <!-- Page Heading -->
             @isset($header)
-                <header class="bg-white shadow">
+                <header class="bg-white shadow relative">
                     <div class="w-full py-6 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>

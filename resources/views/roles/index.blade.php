@@ -1,13 +1,10 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                إدارة الأدوار والصلاحيات
-            </h2>
+        <x-floating-toolbar :title="'إدارة الأدوار والصلاحيات'">
             <a href="{{ route('admin.dashboard') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-semibold px-4 py-2 rounded">
-                رجوع
+                ← رجوع
             </a>
-        </div>
+        </x-floating-toolbar>
     </x-slot>
 
     @php

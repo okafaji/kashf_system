@@ -1,25 +1,16 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="fixed top-16 inset-x-0 z-40 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-lg shadow-sm p-4" dir="rtl">
-                <div class="flex items-center justify-between gap-3 flex-wrap mb-0">
-                    <h2 class="font-semibold text-xl text-gray-800 leading-tight whitespace-nowrap shrink-0 mb-0">
-                        لوحة تحكم الأدمن
-                    </h2>
-                    <div class="flex gap-2 flex-wrap">
-                        <a href="{{ route('dashboard') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-semibold px-4 py-2 rounded">
-                            رجوع للوحة الرئيسية
-                        </a>
-                        <a href="{{ route('users.index') }}" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded">
-                            إدارة المستخدمين
-                        </a>
-                        <a href="{{ route('roles.index') }}" class="bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold px-4 py-2 rounded">
-                            إدارة الأدوار
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-floating-toolbar :title="'لوحة تحكم الأدمن'">
+            <a href="{{ route('dashboard') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-semibold px-4 py-2 rounded">
+                رجوع للوحة الرئيسية
+            </a>
+            <a href="{{ route('users.index') }}" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded">
+                إدارة المستخدمين
+            </a>
+            <a href="{{ route('roles.index') }}" class="bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold px-4 py-2 rounded">
+                إدارة الأدوار
+            </a>
+        </x-floating-toolbar>
     </x-slot>
 
     <div class="py-8">

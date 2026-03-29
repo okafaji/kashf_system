@@ -1,41 +1,34 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="fixed top-16 inset-x-0 z-40 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-7xl mx-auto bg-white border border-gray-200 rounded-lg shadow-sm p-4" dir="rtl">
-                <div class="flex items-center justify-between gap-3">
-                    <h2 class="font-semibold text-xl text-gray-800 leading-tight whitespace-nowrap shrink-0">
-                        {{ __('إدارة المنتسبين') }}
-                    </h2>
-
-                    <div class="flex items-center gap-3 flex-1 overflow-x-auto">
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 min-w-[120px] shrink-0">
-                            <p class="text-gray-600 text-xs font-medium">إجمالي المنتسبين</p>
-                            <p class="text-lg font-bold text-blue-600"><span id="total-employees">{{ $employees->total() }}</span></p>
-                        </div>
-
-                        <div class="bg-purple-50 border border-purple-200 rounded-lg px-4 py-2 min-w-[120px] shrink-0">
-                            <p class="text-gray-600 text-xs font-medium">عدد الأقسام</p>
-                            <p class="text-lg font-bold text-purple-600"><span id="departments-count">{{ $departmentsCount ?? 0 }}</span></p>
-                        </div>
-
-                        <div class="shrink-0 flex items-center gap-2">
-                            <div class="bg-white border border-gray-300 rounded-lg px-3 py-2 w-56 max-w-full">
-                                <input type="text" id="employee-search" value="{{ request('q') }}" placeholder="🔍 ابحث بالاسم أو الرقم أو القسم..."
-                                       class="w-full border-0 p-0 focus:ring-0 text-sm">
-                            </div>
-                            <button type="button" onclick="clearEmployeeSearch()" id="clear-search-btn" class="text-xs text-gray-600 hover:text-gray-800 whitespace-nowrap {{ request('q') ? '' : 'hidden' }}">مسح</button>
-                        </div>
-
-                        <form action="{{ route('employees.sync') }}" method="POST" class="shrink-0">
-                            @csrf
-                            <x-button-info>
-                                تحديث من ملف الإكسل
-                            </x-button-info>
-                        </form>
-                    </div>
+        <x-floating-toolbar :title="'إدارة المنتسبين'">
+            <div class="flex items-center gap-3 flex-1 overflow-x-auto">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 min-w-[120px] shrink-0">
+                    <p class="text-gray-600 text-xs font-medium">إجمالي المنتسبين</p>
+                    <p class="text-lg font-bold text-blue-600"><span id="total-employees">{{ $employees->total() }}</span></p>
                 </div>
+                <div class="bg-purple-50 border border-purple-200 rounded-lg px-4 py-2 min-w-[120px] shrink-0">
+                    <p class="text-gray-600 text-xs font-medium">عدد الأقسام</p>
+                    <p class="text-lg font-bold text-purple-600"><span id="departments-count">{{ $departmentsCount ?? 0 }}</span></p>
+                </div>
+                <div class="shrink-0 flex items-center gap-2">
+                    <div class="bg-white border border-gray-300 rounded-lg px-3 py-2 w-56 max-w-full">
+                        <input type="text" id="employee-search" value="{{ request('q') }}" placeholder="🔍 ابحث بالاسم أو الرقم أو القسم..."
+                               class="w-full border-0 p-0 focus:ring-0 text-sm">
+                    </div>
+                    <button type="button" onclick="clearEmployeeSearch()" id="clear-search-btn" class="text-xs text-gray-600 hover:text-gray-800 whitespace-nowrap {{ request('q') ? '' : 'hidden' }}">مسح</button>
+                </div>
+                <form action="{{ route('employees.sync') }}" method="POST" class="shrink-0">
+                    @csrf
+                    <x-button-info>
+                        تحديث من ملف الإكسل
+                    </x-button-info>
+                </form>
+                <button type="button" onclick="if(window.history.length > 1){window.history.back();}else{window.location='{{ route('dashboard') }}';}"
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-semibold px-4 py-2 rounded">
+                    ← رجوع
+                </button>
             </div>
-        </div>
+        </x-floating-toolbar>
     </x-slot>
 
     <div class="py-12 pt-40" dir="rtl">

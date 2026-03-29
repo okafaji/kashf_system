@@ -1428,7 +1428,7 @@ function setupEvents() {
                 }
                 window.isBulkImporting = false;
                 alert('✅ تم استيراد ' + added + ' اسم' + (errors ? ('\n❌ أخطاء في الصفوف: ' + errorRows.join(',')) : ''));
-            
+
                 // ...باقي الكود كما هو...
                 window.isExcel2DialogOpen = false;
             };

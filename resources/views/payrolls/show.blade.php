@@ -1,26 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <div style="height: 80px;"></div>
-        <div id="floatingToolbar" dir="rtl"
-            style="position: fixed; top: 80px; right: 30px; left: 30px; z-index: 1000; background: #fff; border: 1px solid #ccc; border-radius: 10px; box-shadow: 0 2px 8px #0002; padding: 12px 24px; min-width: 350px; max-width: 98vw; display: flex; justify-content: space-between; align-items: center;">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight" style="margin: 0;">
-                تفاصيل الكشف رقم: {{ $kashf_no }}
-            </h2>
-            <div class="flex gap-2">
-                <button type="button" onclick="openAddEmployeeModal()"
-                        class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                    + إضافة منتسب
-                </button>
-                <a href="{{ route('payrolls.print_multiple', ['kashf_no' => $kashf_no]) }}" target="_blank"
-                   class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                    طباعة الكشف
-                </a>
-                <a href="{{ request('back') ?? route('payrolls.index') }}"
-                   class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-                    رجوع
-                </a>
-            </div>
-        </div>
+        <x-floating-toolbar :title="'تفاصيل الكشف رقم: ' . $kashf_no">
+            <button type="button" onclick="openAddEmployeeModal()"
+                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                + إضافة منتسب
+            </button>
+            <a href="{{ route('payrolls.print_multiple', ['kashf_no' => $kashf_no]) }}" target="_blank"
+               class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                طباعة الكشف
+            </a>
+        </x-floating-toolbar>
     </x-slot>
 
     <div class="py-8" style="margin-top: 120px;">

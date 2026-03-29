@@ -3,37 +3,32 @@
 <x-app-layout>
 
     <x-slot name="header">
-        <div style="height: 80px;"></div> <!-- مساحة فارغة أعلى الصفحة -->
-        <div id="floatingToolbar" dir="rtl"
-            style="position: fixed; top: 80px; right: 30px; z-index: 1000; background: #fff; border: 1px solid #ccc; border-radius: 10px; box-shadow: 0 2px 8px #0002; padding: 12px 24px; min-width: 350px; max-width: 98vw;">
-            <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight mr-2 mb-0">{{ __('إضافة كشف إيفاد جديد') }}</h2>
-                <button type="button" onclick="document.getElementById('excel_input').click()" class="bg-green-600 hover:bg-green-700 text-white h-10 w-36 rounded shadow flex items-center justify-center text-sm">
-                    📥 استيراد إكسل
-                </button>
-                <button type="button" id="excel2_btn" class="bg-green-600 hover:bg-green-700 text-white h-10 w-36 rounded shadow flex items-center justify-center text-sm ml-2">
-                    📥 استيراد من اكسل2
-                </button>
-                <input type="file" id="excel2_input" class="hidden" accept=".xlsx, .xls">
-                <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        var btn2 = document.getElementById('excel2_btn');
-                        if (btn2) {
-                            btn2.addEventListener('click', function() {
-                                console.log('🟢 فتح نافذة اختيار ملف Excel2');
-                                document.getElementById('excel2_input').click();
-                            });
-                        }
-                    });
-                </script>
-                <input type="file" id="excel_input" class="hidden" accept=".xlsx, .xls">
-                <button type="button" onclick="clearAllRows()" class="bg-red-600 hover:bg-red-700 text-white h-10 w-36 rounded text-sm font-bold shadow-sm">
-                    🗑️ حذف الكل
-                </button>
-                <button type="submit" id="submitBtn" form="mainPayrollForm" class="bg-blue-600 hover:bg-blue-700 text-white font-bold h-10 w-44 rounded shadow">
-                    حفظ وترحيل البيانات
-                </button>
-            </div>
+        <x-floating-toolbar :title="'إضافة كشف إيفاد جديد'">
+            <button type="button" onclick="document.getElementById('excel_input').click()" class="bg-green-600 hover:bg-green-700 text-white h-10 w-36 rounded shadow flex items-center justify-center text-sm">
+                📥 استيراد إكسل
+            </button>
+            <button type="button" id="excel2_btn" class="bg-green-600 hover:bg-green-700 text-white h-10 w-36 rounded shadow flex items-center justify-center text-sm ml-2">
+                📥 استيراد من اكسل2
+            </button>
+            <input type="file" id="excel2_input" class="hidden" accept=".xlsx, .xls">
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    var btn2 = document.getElementById('excel2_btn');
+                    if (btn2) {
+                        btn2.addEventListener('click', function() {
+                            console.log('🟢 فتح نافذة اختيار ملف Excel2');
+                            document.getElementById('excel2_input').click();
+                        });
+                    }
+                });
+            </script>
+            <input type="file" id="excel_input" class="hidden" accept=".xlsx, .xls">
+            <button type="button" onclick="clearAllRows()" class="bg-red-600 hover:bg-red-700 text-white h-10 w-36 rounded text-sm font-bold shadow-sm">
+                🗑️ حذف الكل
+            </button>
+            <button type="submit" id="submitBtn" form="mainPayrollForm" class="bg-blue-600 hover:bg-blue-700 text-white font-bold h-10 w-44 rounded shadow">
+                حفظ وترحيل البيانات
+            </button>
             <div style="margin-top: 10px; text-align: right;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <label for="employee_search" class="block text-sm font-medium text-gray-700 mb-1">ابحث عن المنتسب:</label>
@@ -41,7 +36,11 @@
                 </div>
                 <select id="employee_search" style="width: 320px;"></select>
             </div>
-        </div>
+            <button type="button" onclick="if(window.history.length > 1){window.history.back();}else{window.location='{{ route('payrolls.index') }}';}"
+                class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-semibold px-4 py-2 rounded">
+                ← رجوع
+            </button>
+        </x-floating-toolbar>
     </x-slot>
 
     <script>
